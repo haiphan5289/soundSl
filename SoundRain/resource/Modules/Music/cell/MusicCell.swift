@@ -21,7 +21,7 @@ class MusicCell: UICollectionViewCell {
             return
         }
         
-        self.img.image = UIImage(named: img)
+        self.img.loadhinh(link: img)
         self.lbTitle.text = model.title
     }
 

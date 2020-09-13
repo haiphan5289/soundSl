@@ -62,12 +62,12 @@ extension MusicVC {
         
     }
     private func dummyData() {
-        let data1: MusicModel = MusicModel(img: "img_rain_night", title: "Tiếng mưa đêm", resource: "soundRain")
-        let data2: MusicModel = MusicModel(img: "img_rain_night", title: "Tiếng nước chảy và Piano", resource: "nuocchayandAudio")
-        let data = [data1, data2]
-        data.forEach { (v) in
-            self.dataSource.append(v)
-        }
+//        let data1: MusicModel = MusicModel(img: "img_rain_night", title: "Tiếng mưa đêm", resource: "soundRain")
+//        let data2: MusicModel = MusicModel(img: "img_rain_night", title: "Tiếng nước chảy và Piano", resource: "nuocchayandAudio")
+//        let data = [data1, data2]
+//        data.forEach { (v) in
+//            self.dataSource.append(v)
+//        }
     }
     func playSound() {
         guard let url = Bundle.main.url(forResource: "soundRain", withExtension: "mp3") else { return }
@@ -91,12 +91,13 @@ extension MusicVC {
         }
     }
     private func setupRX() {
-        Observable.just(dataSource)
+//        Observable.just(dataSource)
+        musicStream?.dataSource.asObserver()
             .bind(to: collectionView.rx.items(cellIdentifier: MusicCell.identifier, cellType: MusicCell.self)) {[weak self] (row, element, cell) in
-                guard let wSelf = self else {
-                    return
-                }
-                cell.updateUI(model: wSelf.dataSource[row])
+//                guard let wSelf = self else {
+//                    return
+//                }
+                cell.updateUI(model: element)
         }.disposed(by: disposeBag)
         
         collectionView.rx.itemSelected.bind { (idx) in
@@ -106,10 +107,6 @@ extension MusicVC {
             vc.currentIndex = idx
             self.navigationController?.pushViewController(vc, animated: true)
         }.disposed(by: disposeBag)
-        
-        musicStream?.dataSource.asObserver().bind(onNext: { (data) in
-            print(data)
-            }).disposed(by: disposeBag)
     }
     func playSound(text: String) {
               guard let url = Bundle.main.url(forResource: text, withExtension: "mp3") else { return }

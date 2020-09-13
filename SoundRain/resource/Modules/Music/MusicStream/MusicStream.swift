@@ -12,6 +12,7 @@ import AVFoundation
 import RxRelay
 import Realm
 import RealmSwift
+import Firebase
 
 protocol MusicStream {
     var dataSource: BehaviorSubject<[MusicModel]> { get }
@@ -37,10 +38,18 @@ final class MusicStreamIpl: MusicStream {
 }
 extension MusicStreamIpl {
     private func dummyData() {
-        let data1: MusicModel = MusicModel(img: "img_rain_night", title: "Tiếng mưa đêm", resource: "soundRain")
-        let data2: MusicModel = MusicModel(img: "img_rain_night", title: "Tiếng nước chảy và Piano", resource: "nuocchayandAudio")
-        let data = [data1, data2]
-        dataSource.onNext(data)
+//        let data1: MusicModel = MusicModel(img: "img_rain_night", title: "Tiếng mưa đêm", resource: "soundRain")
+//        let data2: MusicModel = MusicModel(img: "img_rain_night", title: "Tiếng nước chảy và Piano", resource: "nuocchayandAudio")
+//        let data = [data1, data2]
+//        dataSource.onNext(data)
+        var data: [MusicModel] = []
+        let dataBase = Database.database().reference()
+        dataBase.child("\(FirebaseTable.sound.table)").observe(.childAdded) { (snapShot) in
+            if let user = self.convertDataSnapshotToCodable(data: snapShot, type: MusicModel.self) {
+                data.append(user)
+                self.dataSource.onNext(data)
+            }
+        }
     }
     private func setupRX() {
         self.maxValueObs.asObserver().bind { (value) in
@@ -139,5 +148,17 @@ extension MusicStreamIpl {
         names?.forEach({ (item) in
             print(item.name)
         })
+    }
+}
+extension MusicStreamIpl {
+    func convertDataSnapshotToCodable<T: Codable> (data: DataSnapshot, type: T.Type) -> T? {
+        do {
+            let value = try JSONSerialization.data(withJSONObject: data.value, options: .prettyPrinted)
+            let objec = try JSONDecoder().decode(T.self, from: value)
+            return objec
+        } catch let err {
+            print(err.localizedDescription)
+        }
+        return nil
     }
 }
