@@ -107,6 +107,7 @@ extension MusicVC {
             vc.currentIndex = idx
             self.navigationController?.pushViewController(vc, animated: true)
         }.disposed(by: disposeBag)
+        
     }
     func playSound(text: String) {
               guard let url = Bundle.main.url(forResource: text, withExtension: "mp3") else { return }
