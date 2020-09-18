@@ -24,7 +24,34 @@ class MusicVC: UIViewController {
         visualize()
         musicStream = MusicStreamIpl.init()
         setupRX()
-        
+//        let ryan = Student(score: BehaviorSubject(value: 80))
+//        let charlotte = Student(score: BehaviorSubject(value: 90))
+
+//        // 3
+//        let student = PublishSubject<Student>()
+//
+//        // 4
+//        student.asObserver()
+//               .flatMap {
+//                     $0.score
+//                }
+//                // 5
+//                .subscribe(onNext: {
+//                     print($0)
+//                 })
+//                .dispose()
+//
+//        // 6
+//        student.map { (stu) -> Observable<Int> in
+//            return stu.score
+//        }.bind { (value) in
+//            print(value)
+//        }.disposed(by: disposeBag)
+//
+//        student.onNext(ryan)
+//        ryan.score.onNext(85)
+//        student.onNext(charlotte)
+//        charlotte.score.onNext(95)
     }
 
 }
@@ -138,4 +165,7 @@ extension MusicVC {
                   print(error.localizedDescription)
               }
           }
+}
+struct Student {
+    var score: BehaviorSubject<Int>
 }

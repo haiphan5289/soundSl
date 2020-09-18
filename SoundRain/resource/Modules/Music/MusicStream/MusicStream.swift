@@ -38,10 +38,6 @@ final class MusicStreamIpl: MusicStream {
 }
 extension MusicStreamIpl {
     private func dummyData() {
-//        let data1: MusicModel = MusicModel(img: "img_rain_night", title: "Tiếng mưa đêm", resource: "soundRain")
-//        let data2: MusicModel = MusicModel(img: "img_rain_night", title: "Tiếng nước chảy và Piano", resource: "nuocchayandAudio")
-//        let data = [data1, data2]
-//        dataSource.onNext(data)
         var data: [MusicModel] = []
         let dataBase = Database.database().reference()
         dataBase.child("\(FirebaseTable.sound.table)").observe(.childAdded) { (snapShot) in
@@ -59,7 +55,6 @@ extension MusicStreamIpl {
         self.listMusiceFavourite.asObservable().bind { (value) in
             self.listLoved = value
             self.writeRealm(list: value)
-//            self.addName(text: "lll")
             self.arrayToList()
             self.loadPeople()
         }.disposed(by: disposeBag)
@@ -149,6 +144,35 @@ extension MusicStreamIpl {
             print(item.name)
         })
     }
+       func playSound(text: String) {
+            guard let url = Bundle.main.url(forResource: text, withExtension: "mp3") else { return }
+    
+            do {
+                try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
+                try AVAudioSession.sharedInstance().setActive(true)
+    
+                /* The following line is required for the player to work on iOS 11. Change the file type accordingly*/
+//                player = try AVAudioPlayer(contentsOf: url, fileTypeHint: AVFileType.mp3.rawValue)
+//    
+//                /* iOS 10 and earlier require the following line:
+//                player = try AVAudioPlayer(contentsOf: url, fileTypeHint: AVFileTypeMPEGLayer3) */
+//    
+//                guard let player = player else { return }
+//    
+//                player.pause()
+//                player.delegate = self
+//
+//                slideMusic.minimumValue = 0
+//                slideMusic.maximumValue = Float(player.duration)
+//                let m = Int(player.duration / 60)
+//                let s = Int(player.duration) % 60
+//                lbEnd.text = "\(m):\(s)"
+//                player.play()
+//                timer = Observable<Int>.interval(RxTimeInterval.milliseconds(1000), scheduler: MainScheduler.asyncInstance)
+            } catch let error {
+                print(error.localizedDescription)
+            }
+        }
 }
 extension MusicStreamIpl {
     func convertDataSnapshotToCodable<T: Codable> (data: DataSnapshot, type: T.Type) -> T? {
