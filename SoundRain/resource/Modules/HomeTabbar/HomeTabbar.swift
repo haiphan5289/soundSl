@@ -47,5 +47,6 @@ extension HomeTabbar {
                 controller.tabBarItem.title = type.text
             }
         }
+        self.tabBar.barTintColor = #colorLiteral(red: 0.03921568627, green: 0.03137254902, blue: 0.1725490196, alpha: 1)
     }
 }

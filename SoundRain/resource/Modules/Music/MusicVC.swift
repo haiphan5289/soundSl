@@ -19,6 +19,7 @@ class MusicVC: UIViewController {
     private var collectionView: UICollectionView!
     private let disposeBag = DisposeBag()
     private var musicStream: MusicStreamIpl?
+    private var vPlayCurrent: UIView = UIView.init()
     override func viewDidLoad() {
         super.viewDidLoad()
         visualize()
@@ -57,8 +58,7 @@ class MusicVC: UIViewController {
 }
 extension MusicVC {
     private func visualize() {
-        dummyData()
-        
+        let hTabBar: Int = Int(self.tabBarController?.tabBar.frame.height ?? 0)
         self.view.backgroundColor = .white
         
         let imgBG: UIImageView = UIImageView(frame: .zero)
@@ -82,89 +82,69 @@ extension MusicVC {
         
         self.view.addSubview(collectionView)
         collectionView.snp.makeConstraints { (make) in
-            make.left.right.bottom.equalToSuperview()
+            make.left.right.equalToSuperview()
+            make.bottom.equalToSuperview().inset(hTabBar)
             make.height.equalTo(self.view.bounds.height * 2 / 3)
         }
-        collectionView.backgroundColor = .clear
+        collectionView.backgroundColor = .red
+        
+        vPlayCurrent.backgroundColor = #colorLiteral(red: 0.1450980392, green: 0.137254902, blue: 0.2901960784, alpha: 1)
+        self.view.addSubview(vPlayCurrent)
+        vPlayCurrent.snp.makeConstraints { (make) in
+            make.left.right.equalToSuperview()
+            make.bottom.equalTo(collectionView.snp.bottom)
+            make.height.equalTo(70)
+        }
+        
+        let img: UIImageView = UIImageView(frame: .zero)
+        img.backgroundColor = .red
+        self.vPlayCurrent.addSubview(img)
+        img.snp.makeConstraints { (make) in
+            make.left.top.equalTo(16)
+            make.bottom.equalToSuperview().inset(8)
+            make.width.equalTo(54)
+        }
+        
+        let lbNameMusic: UILabel = UILabel.init(frame: .zero)
+        lbNameMusic.text = "Hải"
+        self.vPlayCurrent.addSubview(lbNameMusic)
+        lbNameMusic.snp.makeConstraints { (make) in
+            make.top.equalTo(img)
+            make.left.equalTo(img.snp.right).inset(-16)
+        }
+        
+        let lbTimeMusic: UILabel = UILabel.init(frame: .zero)
+        lbTimeMusic.text = "10:00"
+        self.vPlayCurrent.addSubview(lbTimeMusic)
+        lbTimeMusic.snp.makeConstraints { (make) in
+            make.bottom.equalTo(img)
+            make.left.equalTo(img.snp.right).inset(-16)
+        }
+        
+        let btPlay: UIButton = UIButton.init(frame: .zero)
+        btPlay.backgroundColor = .red
+        self.vPlayCurrent.addSubview(btPlay)
+        btPlay.snp.makeConstraints { (make) in
+            make.right.equalToSuperview().inset(16)
+            make.width.height.equalTo(54)
+            make.centerY.equalToSuperview()
+        }
         
     }
-    private func dummyData() {
-//        let data1: MusicModel = MusicModel(img: "img_rain_night", title: "Tiếng mưa đêm", resource: "soundRain")
-//        let data2: MusicModel = MusicModel(img: "img_rain_night", title: "Tiếng nước chảy và Piano", resource: "nuocchayandAudio")
-//        let data = [data1, data2]
-//        data.forEach { (v) in
-//            self.dataSource.append(v)
-//        }
-    }
-    func playSound() {
-        guard let url = Bundle.main.url(forResource: "soundRain", withExtension: "mp3") else { return }
-
-        do {
-            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
-            try AVAudioSession.sharedInstance().setActive(true)
-
-            /* The following line is required for the player to work on iOS 11. Change the file type accordingly*/
-            player = try AVAudioPlayer(contentsOf: url, fileTypeHint: AVFileType.mp3.rawValue)
-
-            /* iOS 10 and earlier require the following line:
-            player = try AVAudioPlayer(contentsOf: url, fileTypeHint: AVFileTypeMPEGLayer3) */
-
-            guard let player = player else { return }
-
-            player.play()
-
-        } catch let error {
-            print(error.localizedDescription)
-        }
-    }
     private func setupRX() {
-//        Observable.just(dataSource)
         musicStream?.dataSource.asObserver()
-            .bind(to: collectionView.rx.items(cellIdentifier: MusicCell.identifier, cellType: MusicCell.self)) {[weak self] (row, element, cell) in
-//                guard let wSelf = self else {
-//                    return
-//                }
+            .bind(to: collectionView.rx.items(cellIdentifier: MusicCell.identifier, cellType: MusicCell.self)) { (row, element, cell) in
                 cell.updateUI(model: element)
         }.disposed(by: disposeBag)
         
         collectionView.rx.itemSelected.bind { (idx) in
             let vc = MusicDetail(nibName: "MusicDetail", bundle: nil)
-//            let text = self.dataSource[idx.row].resource ?? ""
-//            vc.text = text
             vc.currentIndex = idx
             self.navigationController?.pushViewController(vc, animated: true)
         }.disposed(by: disposeBag)
         
+        
     }
-    func playSound(text: String) {
-              guard let url = Bundle.main.url(forResource: text, withExtension: "mp3") else { return }
-      
-              do {
-                  try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
-                  try AVAudioSession.sharedInstance().setActive(true)
-      
-                  /* The following line is required for the player to work on iOS 11. Change the file type accordingly*/
-                  player = try AVAudioPlayer(contentsOf: url, fileTypeHint: AVFileType.mp3.rawValue)
-      
-                  /* iOS 10 and earlier require the following line:
-                  player = try AVAudioPlayer(contentsOf: url, fileTypeHint: AVFileTypeMPEGLayer3) */
-      
-                  guard let player = player else { return }
-      
-                  player.pause()
-//                  player.delegate = self
-//
-//                  slideMusic.minimumValue = 0
-//                  slideMusic.maximumValue = Float(player.duration)
-//                  let m = Int(player.duration / 60)
-//                  let s = Int(player.duration) % 60
-//                  lbEnd.text = "\(m):\(s)"
-                  player.play()
-//                  timer = Observable<Int>.interval(RxTimeInterval.milliseconds(1000), scheduler: MainScheduler.asyncInstance)
-              } catch let error {
-                  print(error.localizedDescription)
-              }
-          }
 }
 struct Student {
     var score: BehaviorSubject<Int>
