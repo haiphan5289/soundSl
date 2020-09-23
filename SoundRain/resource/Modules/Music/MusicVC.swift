@@ -129,8 +129,8 @@ extension MusicVC {
         
         collectionView.rx.itemSelected.bind { (idx) in
             let vc = MusicDetail(nibName: "MusicDetail", bundle: nil)
-            let text = self.dataSource[idx.row].resource ?? ""
-            vc.text = text
+//            let text = self.dataSource[idx.row].resource ?? ""
+//            vc.text = text
             vc.currentIndex = idx
             self.navigationController?.pushViewController(vc, animated: true)
         }.disposed(by: disposeBag)

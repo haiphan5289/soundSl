@@ -13,6 +13,7 @@ import RxRelay
 import Realm
 import RealmSwift
 import Firebase
+import Alamofire
 
 protocol MusicStream {
     var dataSource: BehaviorSubject<[MusicModel]> { get }
@@ -20,10 +21,12 @@ protocol MusicStream {
 }
 final class MusicStreamIpl: MusicStream {
     var dataSource: BehaviorSubject<[MusicModel]> = BehaviorSubject.init(value: [])
+    private var mSource: [MusicModel] = []
     var miniValue: TimeInterval = 0
     var maxValue: TimeInterval = 0
-    private var miniValueObs: PublishSubject<TimeInterval> = PublishSubject.init()
-    private var maxValueObs: PublishSubject<TimeInterval> = PublishSubject.init()
+//    private var miniValueObs: PublishSubject<TimeInterval> = PublishSubject.init()
+//    private var maxValueObs: PublishSubject<TimeInterval> = PublishSubject.init()
+    var maxValueSlider: PublishSubject<Double> = PublishSubject.init()
     var listMusiceFavourite: BehaviorRelay<[MusicModel]> = BehaviorRelay.init(value: [])
     var listLoved: [MusicModel] = []
     var names: Results<MyObject>?
@@ -48,15 +51,19 @@ extension MusicStreamIpl {
         }
     }
     private func setupRX() {
-        self.maxValueObs.asObserver().bind { (value) in
-            self.maxValue = value
-        }.disposed(by: disposeBag)
         
         self.listMusiceFavourite.asObservable().bind { (value) in
             self.listLoved = value
             self.writeRealm(list: value)
             self.arrayToList()
             self.loadPeople()
+        }.disposed(by: disposeBag)
+        
+        self.dataSource.asObserver().bind { [weak self] (datas) in
+            guard let wSelf = self else {
+                return
+            }
+            wSelf.mSource = datas
         }.disposed(by: disposeBag)
         
     }
@@ -79,40 +86,40 @@ extension MusicStreamIpl {
         guard list.count > 0 else {
             return
         }
-//        data.listItem = list
-//        data.name = [1,2]
-//        do {
-//            try realm.write {
-//                realm.add(data)
-//            }
-//        } catch {
-//            print("Error add data")
-////        }
-//        let newName = ExampleData()
-//        newName.name = "Hải"
-//        do {
-//            try realm.write {
-//                realm.add(newName)
-//            }
-//        } catch {
-//            print("Error add data")
-//        }
+        //        data.listItem = list
+        //        data.name = [1,2]
+        //        do {
+        //            try realm.write {
+        //                realm.add(data)
+        //            }
+        //        } catch {
+        //            print("Error add data")
+        ////        }
+        //        let newName = ExampleData()
+        //        newName.name = "Hải"
+        //        do {
+        //            try realm.write {
+        //                realm.add(newName)
+        //            }
+        //        } catch {
+        //            print("Error add data")
+        //        }
     }
-//    private func addName(text: String) {
-////        let newName = ExampleData()
-////        newName.name.append(1)
-//        let check = List<MyObject>()
-//        let a: MyObject = MyObject()
-//        check.append(a)
-//
-//        do {
-//            try realm.write {
-//                realm.add(a)
-//            }
-//        } catch {
-//            print("Error add data")
-//        }
-//    }
+    //    private func addName(text: String) {
+    ////        let newName = ExampleData()
+    ////        newName.name.append(1)
+    //        let check = List<MyObject>()
+    //        let a: MyObject = MyObject()
+    //        check.append(a)
+    //
+    //        do {
+    //            try realm.write {
+    //                realm.add(a)
+    //            }
+    //        } catch {
+    //            print("Error add data")
+    //        }
+    //    }
     func arrayToList() {
         let b = LisResourceItem()
         b.key = "hải"
@@ -120,18 +127,18 @@ extension MusicStreamIpl {
         let c = MyObject()
         c.name.append(b)
         let objectsArray = [MyObject(), MyObject(), MyObject(), MyObject(), MyObject(), c]
-//        let a: MyObject = MyObject()
-//        a.name = 1
-//        let objectsArray = [a, a]
+        //        let a: MyObject = MyObject()
+        //        a.name = 1
+        //        let objectsArray = [a, a]
         let objectsRealmList = List<MyObject>()
-
+        
         // this one is illegal
         //objectsRealmList = objectsArray
-
+        
         for object in objectsArray {
             objectsRealmList.append(object)
         }
-
+        
         // storing the data...
         let realm = try! Realm()
         try! realm.write {
@@ -144,35 +151,73 @@ extension MusicStreamIpl {
             print(item.name)
         })
     }
-       func playSound(text: String) {
-            guard let url = Bundle.main.url(forResource: text, withExtension: "mp3") else { return }
+   func getIndex(idx: IndexPath) {
+        guard let text = self.mSource[idx.row].url else {
+            return
+        }
+        self.playSound(text: text)
+    }
     
-            do {
-                try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
-                try AVAudioSession.sharedInstance().setActive(true)
-    
-                /* The following line is required for the player to work on iOS 11. Change the file type accordingly*/
-//                player = try AVAudioPlayer(contentsOf: url, fileTypeHint: AVFileType.mp3.rawValue)
-//    
-//                /* iOS 10 and earlier require the following line:
-//                player = try AVAudioPlayer(contentsOf: url, fileTypeHint: AVFileTypeMPEGLayer3) */
-//    
-//                guard let player = player else { return }
-//    
-//                player.pause()
-//                player.delegate = self
-//
-//                slideMusic.minimumValue = 0
-//                slideMusic.maximumValue = Float(player.duration)
-//                let m = Int(player.duration / 60)
-//                let s = Int(player.duration) % 60
-//                lbEnd.text = "\(m):\(s)"
-//                player.play()
-//                timer = Observable<Int>.interval(RxTimeInterval.milliseconds(1000), scheduler: MainScheduler.asyncInstance)
-            } catch let error {
-                print(error.localizedDescription)
+    private func playSound(text: String) {
+        guard  let url = URL(string: text) else {
+            return
+        }
+        downloadFileFromURL(url: url)
+        
+        //            do {
+        //                try AVAudioSession.sharedInstance().setCategory(.playAndRecord, mode: .default)
+        //                try AVAudioSession.sharedInstance().setActive(true)
+        //
+        ////                 The following line is required for the player to work on iOS 11. Change the file type accordingly
+        ////                audio = try AVAudioPlayer(contentsOf: url, fileTypeHint: AVFileType.mp3.rawValue)
+        //                /* iOS 10 and earlier require the following line:
+        //                player = try AVAudioPlayer(contentsOf: url, fileTypeHint: AVFileTypeMPEGLayer3) */
+        //
+        //                guard let player = audio else { return }
+        //
+        //                player.pause()
+        ////                slideMusic.minimumValue = 0
+        ////                slideMusic.maximumValue = Float(player.duration)
+//                        let m = Int(player.duration / 60)
+//                        let s = Int(player.duration) % 60
+//                        lbEnd.text = "\(m):\(s)"
+        //                player.play()
+        ////                timer = Observable<Int>.interval(RxTimeInterval.milliseconds(1000), scheduler: MainScheduler.asyncInstance)
+        //            } catch let error {
+        //                print(error.localizedDescription)
+        //            }
+    }
+    private func downloadFileFromURL(url:URL){
+        let destination: DownloadRequest.DownloadFileDestination = { _, _ in
+            var documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            documentsURL.appendPathComponent("file.csv")
+            return (documentsURL, [.removePreviousFile])
+        }
+        
+        Alamofire.download(url, to: destination).responseData { response in
+            if let destinationUrl = response.destinationURL {
+                self.play(url: destinationUrl.absoluteURL)
             }
         }
+        
+    }
+    private func play(url:URL) {
+        do {
+            self.audio = try AVAudioPlayer(contentsOf: url)
+            audio?.prepareToPlay()
+            audio?.play()
+            
+            guard let max = audio?.duration else {
+                return
+            }
+            self.maxValueSlider.onNext(max)
+        } catch let error as NSError {
+            print(error.localizedDescription)
+        } catch {
+            print("AVAudioPlayer init failed")
+        }
+        
+    }
 }
 extension MusicStreamIpl {
     func convertDataSnapshotToCodable<T: Codable> (data: DataSnapshot, type: T.Type) -> T? {
@@ -186,3 +231,4 @@ extension MusicStreamIpl {
         return nil
     }
 }
+

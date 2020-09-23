@@ -17,7 +17,7 @@ class PostProductVC: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         visualize()
-//        login()
+        login()
         setupRX()
     }
     
@@ -40,7 +40,11 @@ extension PostProductVC {
 //            print(value)
 //            })).disposed(by: disposeBag)
         Observable.combineLatest(self.uploadImage(), self.urlMp3Obserable()).bind { (img, url) in
-            print("")
+            let dataDic: [String: Any] = ["title": "Tiếng mưa rơi",
+                                          "img":img,
+                                          "url": url,
+            ]
+            FirebaseDatabase.instance.ref.child("\(FirebaseTable.sound.table)").childByAutoId().setValue(dataDic)
         }.disposed(by: disposeBag)
     }
     private func login() {
@@ -64,7 +68,7 @@ extension PostProductVC {
         do {
             // Create a reference to the file you want to upload
             let storageRef = Storage.storage().reference()
-            let riversRef = storageRef.child("music/rain")
+            let riversRef = storageRef.child("music/rain.mp3")
             
             // Upload the file to the path "images/rivers.jpg"
            riversRef.putData(data, metadata: nil) { (metadata, error) in
@@ -131,7 +135,7 @@ extension PostProductVC {
                 do {
                     // Create a reference to the file you want to upload
                     let storageRef = Storage.storage().reference()
-                    let riversRef = storageRef.child("music/rain22244")
+                    let riversRef = storageRef.child("music/rain22244.mp3")
                     
                     // Upload the file to the path "images/rivers.jpg"
                    riversRef.putData(data, metadata: nil) { (metadata, error) in
@@ -166,7 +170,7 @@ extension PostProductVC {
                 do {
                           // Create a reference to the file you want to upload
                           let storageRef = Storage.storage().reference()
-                          let riversRef = storageRef.child("imgMusic/rain5555")
+                          let riversRef = storageRef.child("imgMusic/rain5555.jpg")
                           
                           // Upload the file to the path "images/rivers.jpg"
                           riversRef.putData(data, metadata: nil) { (metadata, error) in

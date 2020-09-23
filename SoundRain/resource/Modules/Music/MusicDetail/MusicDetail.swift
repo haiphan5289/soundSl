@@ -24,8 +24,10 @@ final class MusicDetail: UIViewController {
     @IBOutlet weak var btPrevious: UIButton!
     @IBOutlet weak var btNext: UIButton!
     @IBOutlet weak var btLoved: UIButton!
+    
     private var musicStream: MusicStreamIpl = MusicStreamIpl.init()
     private var dataSource: [MusicModel] = []
+    private var isEndAudio: PublishSubject<Bool> = PublishSubject.init()
     var currentIndex: IndexPath = IndexPath(row: 0, section: 0)
     private var timer: Observable<Int>?
     private let disposeBag = DisposeBag()
@@ -33,6 +35,8 @@ final class MusicDetail: UIViewController {
     var text: String = ""
     override func viewDidLoad() {
         super.viewDidLoad()
+        slideMusic.maximumValue = 10
+        slideMusic.value = 0
         timer = Observable<Int>.interval(RxTimeInterval.milliseconds(1000), scheduler: MainScheduler.asyncInstance)
         setupRX()
 //        self.playSound(text: text)
@@ -96,14 +100,15 @@ extension MusicDetail {
         }
     private func setupRX() {
         timer?.bind(onNext: { [weak self] (value) in
-            guard let wSelf = self, let current = wSelf.player?.currentTime else {
+            guard let wSelf = self, let current = wSelf.musicStream.audio?.currentTime else {
                 return
             }
             wSelf.slideMusic.value = Float(CGFloat(current))
             let m = Int(current / 60)
             let s = Int(current) % 60
             wSelf.lbStart.text = "\(m):\(s)"
-//            guard current == wSelf.player?.duration  else {
+            
+//            guard current == wSelf.musicStream.audio?.duration  else {
 //                wSelf.slideMusic.value = Float(CGFloat(current))
 //                return
 //            }
@@ -119,6 +124,18 @@ extension MusicDetail {
 //            wSelf.player?.play()
         }).disposed(by: disposeBag)
         
+        isEndAudio.asObserver().bind(onNext: weakify({ (isEnd, wSelf) in
+            guard isEnd else {
+                return
+            }
+            
+            guard wSelf.isReplay else {
+                wSelf.musicStream.audio?.pause()
+                return
+            }
+            wSelf.musicStream.audio?.play()
+        })).disposed(by: disposeBag)
+        
 //        NotificationCenter.default.rx.notification(NSNotification.Name.AVPlayerItemDidPlayToEndTime).bind { (isNo) in
 //            print(isNo)
 //        }.disposed(by: disposeBag)
@@ -131,13 +148,24 @@ extension MusicDetail {
 //            print("Video Finished")
 //        }
         
+        self.musicStream.maxValueSlider.asObserver().bind { [weak self] (value) in
+            guard let wSelf = self else {
+                return
+            }
+            wSelf.slideMusic.maximumValue = Float(value)
+            wSelf.musicStream.audio?.delegate = self
+            let m = Int(value / 60)
+            let s = Int(value) % 60
+            wSelf.lbEnd.text = "\(m):\(s)"
+        }.disposed(by: disposeBag)
+        
         slideMusic.rx.value.bind { [weak self](value) in
             guard let wSelf = self else {
                 return
             }
-            wSelf.player?.pause()
-            wSelf.player?.currentTime = TimeInterval(value)
-            wSelf.player?.play()
+            wSelf.musicStream.audio?.pause()
+            wSelf.musicStream.audio?.currentTime = TimeInterval(value)
+            wSelf.musicStream.audio?.play()
         }.disposed(by: disposeBag)
         
         self.btPause.rx.tap.bind(onNext: weakify { wSelf in
@@ -153,6 +181,7 @@ extension MusicDetail {
         btReplay.rx.tap.bind(onNext: weakify { wSelf in
             if wSelf.btReplay.isSelected {
                 wSelf.btReplay.isSelected = false
+                wSelf.isReplay = false
                 wSelf.btReplay.setImage(UIImage(named: "ic_replay"), for: .normal)
             } else {
                 wSelf.btReplay.isSelected = true
@@ -168,12 +197,16 @@ extension MusicDetail {
             vc.delegate = self
             self.present(vc, animated: true, completion: nil)
         }.disposed(by: disposeBag)
-        
-        musicStream.dataSource.asObserver().bind(onNext: weakify({ (data, wSelf) in
-            wSelf.dataSource = data
-            wSelf.playSound(text: data[wSelf.currentIndex.row].resource ?? "")
-            wSelf.updateUIBUtton(idx: wSelf.currentIndex)
-            })).disposed(by: disposeBag)
+
+//        musicStream.dataSource.asObserver().bind(onNext: weakify({ (data, wSelf) in
+//            wSelf.dataSource = data
+////            wSelf.playSound(text: data[wSelf.currentIndex.row].resource ?? "")
+//            wSelf.updateUIBUtton(idx: wSelf.currentIndex)
+//            guard let firstItem = data.first, let resource = firstItem.url else {
+//                return
+//            }
+//            wSelf.musicStream.playSound(text: resource)
+//            })).disposed(by: disposeBag)
         
         btPrevious.rx.tap.bind(onNext: weakify({ (wSelf) in
             switch wSelf.currentIndex.row {
@@ -209,14 +242,22 @@ extension MusicDetail {
             }
             
             })).disposed(by: disposeBag)
+        
+        self.playItem()
+        
+    }
+    private func playItem() {
+        self.musicStream.getIndex(idx: self.currentIndex)
     }
 }
 extension MusicDetail: AVAudioPlayerDelegate {
     func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
-        if isReplay {
-            self.player?.pause()
-            self.player?.play()
-        }
+        isEndAudio.onNext(flag)
+//        print(flag)
+//        if isReplay {
+//            self.player?.pause()
+//            self.player?.play()
+//        }
     }
 }
 extension MusicDetail: ListMusicDelegate {
