@@ -20,6 +20,7 @@ class MusicVC: UIViewController {
     private let disposeBag = DisposeBag()
     private var musicStream: MusicStreamIpl?
     private var vPlayCurrent: UIView = UIView.init()
+    private var update: PublishSubject<Bool> = PublishSubject.init()
     override func viewDidLoad() {
         super.viewDidLoad()
         visualize()
@@ -53,6 +54,14 @@ class MusicVC: UIViewController {
 //        ryan.score.onNext(85)
 //        student.onNext(charlotte)
 //        charlotte.score.onNext(95)
+    }
+    override func viewWillAppear(_ animated: Bool) {
+        self.musicStream?.maxValueSlider.asObserver().bind(onNext: weakify({ (value, wSelf) in
+            guard value > 0 else {
+                return
+            }
+            
+        })).disposed(by: disposeBag)
     }
 
 }
@@ -130,6 +139,10 @@ extension MusicVC {
             make.centerY.equalToSuperview()
         }
         
+        self.update.asObserver().bind(onNext: weakify({ (_, wSelf) in
+            
+            })).disposed(by: disposeBag)
+        
     }
     private func setupRX() {
         musicStream?.dataSource.asObserver()
@@ -140,10 +153,16 @@ extension MusicVC {
         collectionView.rx.itemSelected.bind { (idx) in
             let vc = MusicDetail(nibName: "MusicDetail", bundle: nil)
             vc.currentIndex = idx
+            vc.delegate = self
             self.navigationController?.pushViewController(vc, animated: true)
         }.disposed(by: disposeBag)
         
         
+    }
+}
+extension MusicVC: MusicDetailDelegate {
+    func callBack() {
+        self.update.onNext(true)
     }
 }
 struct Student {

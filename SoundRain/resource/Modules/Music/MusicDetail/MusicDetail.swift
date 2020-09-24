@@ -11,10 +11,15 @@ import AVFoundation
 import RxSwift
 import RxCocoa
 
+protocol MusicDetailDelegate {
+    func callBack()
+}
+
 final class MusicDetail: UIViewController {
     
     var data: MusicModel?
     var player: AVAudioPlayer?
+    var delegate: MusicDetailDelegate?
     @IBOutlet weak var lbStart: UILabel!
     @IBOutlet weak var btPause: UIButton!
     @IBOutlet weak var btReplay: UIButton!
@@ -59,6 +64,7 @@ final class MusicDetail: UIViewController {
     }
     override func viewWillDisappear(_ animated: Bool) {
         player?.pause()
+        self.delegate?.callBack()
     }
 }
 extension MusicDetail {
