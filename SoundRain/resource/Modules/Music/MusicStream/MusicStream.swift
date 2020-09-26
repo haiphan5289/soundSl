@@ -20,6 +20,7 @@ protocol MusicStream {
     //    func playIndexItem(idx: IndexPath)
     var item: Observable<MusicModel> { get }
     var currentIndexItem: Observable<IndexPath> { get }
+    var isPlaying: Observable<Bool> { get }
 }
 final class MusicStreamIpl: MusicStream {
     public static var share = MusicStreamIpl()
@@ -30,8 +31,12 @@ final class MusicStreamIpl: MusicStream {
         return self.$currentIndex
     }
     
+    var isPlaying: Observable<Bool> {
+        return self.$isPlay
+    }
     @Replay(queue: MainScheduler.asyncInstance) private var itemOb: MusicModel
     @Replay(queue: MainScheduler.asyncInstance) private var currentIndex: IndexPath
+    @Replay(queue: MainScheduler.asyncInstance) private var isPlay: Bool
     private var aaa: BehaviorRelay<MusicModel?> = BehaviorRelay(value: nil)
     var dataSource: BehaviorSubject<[MusicModel]> = BehaviorSubject.init(value: [])
     private var mSource: [MusicModel] = []
@@ -222,7 +227,7 @@ extension MusicStreamIpl {
             self.audio = try AVAudioPlayer(contentsOf: url)
             audio?.prepareToPlay()
             audio?.play()
-            
+            self.isPlay = true
             guard let max = audio?.duration else {
                 return
             }
@@ -233,6 +238,16 @@ extension MusicStreamIpl {
             print("AVAudioPlayer init failed")
         }
         
+    }
+    
+    func playingAudio() {
+        audio?.play()
+        self.isPlay = true
+    }
+    
+    func stopAudio() {
+        audio?.stop()
+        self.isPlay = false
     }
 }
 extension MusicStreamIpl {

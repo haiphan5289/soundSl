@@ -13,7 +13,7 @@ import RxCocoa
 import RxSwift
 
 class MusicVC: UIViewController {
-
+    
     var player: AVAudioPlayer?
     private var dataSource: [MusicModel] = []
     private var collectionView: UICollectionView!
@@ -22,42 +22,43 @@ class MusicVC: UIViewController {
     private let img: UIImageView = UIImageView(frame: .zero)
     private let lbNameMusic: UILabel = UILabel.init(frame: .zero)
     private let lbTimeMusic: UILabel = UILabel.init(frame: .zero)
-    private let btPlay: UIButton = UIButton.init(frame: .zero)
+    private let btNextItem: UIButton = UIButton.init(frame: .zero)
+    private let btPlayItem: UIButton = UIButton.init(frame: .zero)
+    private var isPlayAudio: Bool = false
     private var currentIndexItem: IndexPath?
-    private var update: PublishSubject<Bool> = PublishSubject.init()
     override func viewDidLoad() {
         super.viewDidLoad()
         visualize()
         setupRX()
         MusicStreamIpl.share.setupRX()
-//        let ryan = Student(score: BehaviorSubject(value: 80))
-//        let charlotte = Student(score: BehaviorSubject(value: 90))
-
-//        // 3
-//        let student = PublishSubject<Student>()
-//
-//        // 4
-//        student.asObserver()
-//               .flatMap {
-//                     $0.score
-//                }
-//                // 5
-//                .subscribe(onNext: {
-//                     print($0)
-//                 })
-//                .dispose()
-//
-//        // 6
-//        student.map { (stu) -> Observable<Int> in
-//            return stu.score
-//        }.bind { (value) in
-//            print(value)
-//        }.disposed(by: disposeBag)
-//
-//        student.onNext(ryan)
-//        ryan.score.onNext(85)
-//        student.onNext(charlotte)
-//        charlotte.score.onNext(95)
+        //        let ryan = Student(score: BehaviorSubject(value: 80))
+        //        let charlotte = Student(score: BehaviorSubject(value: 90))
+        
+        //        // 3
+        //        let student = PublishSubject<Student>()
+        //
+        //        // 4
+        //        student.asObserver()
+        //               .flatMap {
+        //                     $0.score
+        //                }
+        //                // 5
+        //                .subscribe(onNext: {
+        //                     print($0)
+        //                 })
+        //                .dispose()
+        //
+        //        // 6
+        //        student.map { (stu) -> Observable<Int> in
+        //            return stu.score
+        //        }.bind { (value) in
+        //            print(value)
+        //        }.disposed(by: disposeBag)
+        //
+        //        student.onNext(ryan)
+        //        ryan.score.onNext(85)
+        //        student.onNext(charlotte)
+        //        charlotte.score.onNext(95)
     }
     override func viewWillAppear(_ animated: Bool) {
         MusicStreamIpl.share.maxValueSlider.asObserver().bind(onNext: weakify({ (value, wSelf) in
@@ -67,7 +68,7 @@ class MusicVC: UIViewController {
             
         })).disposed(by: disposeBag)
     }
-
+    
 }
 extension MusicVC {
     private func visualize() {
@@ -136,18 +137,21 @@ extension MusicVC {
         }
         
         
-        btPlay.setImage(UIImage(named: "ic_next"), for: .normal)
-        self.vPlayCurrent.addSubview(btPlay)
-        btPlay.snp.makeConstraints { (make) in
+        btNextItem.setImage(UIImage(named: "ic_next"), for: .normal)
+        self.vPlayCurrent.addSubview(btNextItem)
+        btNextItem.snp.makeConstraints { (make) in
             make.right.equalToSuperview().inset(16)
             make.width.height.equalTo(54)
             make.centerY.equalToSuperview()
         }
         
-        self.update.asObserver().bind(onNext: weakify({ (_, wSelf) in
-            
-            })).disposed(by: disposeBag)
-        
+        btPlayItem.setImage(UIImage(named: "ic_next"), for: .normal)
+        self.vPlayCurrent.addSubview(btPlayItem)
+        btPlayItem.snp.makeConstraints { (make) in
+            make.right.equalTo(self.btNextItem.snp.left).inset(-16)
+            make.width.height.equalTo(54)
+            make.centerY.equalToSuperview()
+        }
     }
     private func setupRX() {
         MusicStreamIpl.share.dataSource.asObserver()
@@ -162,20 +166,41 @@ extension MusicVC {
             self.navigationController?.pushViewController(vc, animated: true)
         }.disposed(by: disposeBag)
         
-        btPlay.rx.tap.bind(onNext: weakify({ (wSelf) in
+        btNextItem.rx.tap.bind(onNext: weakify({ (wSelf) in
             guard var nextItem = self.currentIndexItem else {
                 return
             }
             nextItem.row += 1
             MusicStreamIpl.share.getIndex(idx: nextItem)
-            })).disposed(by: disposeBag)
+        })).disposed(by: disposeBag)
         
+        btPlayItem.rx.tap.map { (_) -> Bool in
+            return self.isPlayAudio
+        }.bind(onNext: weakify({ (isPlay, wSelf) in
+            guard isPlay else {
+                wSelf.btPlayItem.setImage(UIImage(named: "ic_resume"), for: .normal)
+                MusicStreamIpl.share.playingAudio()
+                return
+            }
+            wSelf.btPlayItem.setImage(UIImage(named: "ic_play"), for: .normal)
+            MusicStreamIpl.share.stopAudio()
+        })).disposed(by: disposeBag)
+        
+        MusicStreamIpl.share.isPlaying.bind(onNext: weakify({ (isPlay, wSelf) in
+            guard isPlay else {
+                wSelf.btPlayItem.setImage(UIImage(named: "ic_resume"), for: .normal)
+                return
+            }
+            wSelf.btPlayItem.setImage(UIImage(named: "ic_play"), for: .normal)
+            
+        })).disposed(by: disposeBag)
         
         let item = MusicStreamIpl.share.item
         let idx = MusicStreamIpl.share.currentIndexItem
         let d = MusicStreamIpl.share.dataSource.asObserver()
+        let isPlayAudio = MusicStreamIpl.share.isPlaying
         
-        Observable.combineLatest(item, idx, d).bind { [weak self] (item, idx, datas) in
+        Observable.combineLatest(item, idx, d, isPlayAudio).bind { [weak self] (item, idx, datas, isPlay) in
             guard let wSelf = self else {
                 return
             }
@@ -183,13 +208,30 @@ extension MusicVC {
             wSelf.img.loadhinh(link: item.img ?? "")
             wSelf.lbNameMusic.text = item.title ?? ""
             wSelf.currentIndexItem = idx
+            wSelf.isPlayAudio = isPlay
             
             guard idx.row == datas.count - 1 else {
-                wSelf.btPlay.isEnabled = true
+                wSelf.btNextItem.isEnabled = true
                 return
             }
-            wSelf.btPlay.isEnabled = false
+            wSelf.btNextItem.isEnabled = false
         }.disposed(by: disposeBag)
+        
+        //        Observable.combineLatest(item, idx, d).bind { [weak self] (item, idx, datas) in
+        //            guard let wSelf = self else {
+        //                return
+        //            }
+        //            wSelf.vPlayCurrent.isHidden = false
+        //            wSelf.img.loadhinh(link: item.img ?? "")
+        //            wSelf.lbNameMusic.text = item.title ?? ""
+        //            wSelf.currentIndexItem = idx
+        //
+        //            guard idx.row == datas.count - 1 else {
+        //                wSelf.btNextItem.isEnabled = true
+        //                return
+        //            }
+        //            wSelf.btNextItem.isEnabled = false
+        //        }.disposed(by: disposeBag)
     }
 }
 extension MusicVC: MusicDetailDelegate {

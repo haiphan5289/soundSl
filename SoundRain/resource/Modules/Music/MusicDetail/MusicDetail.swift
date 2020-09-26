@@ -29,6 +29,7 @@ final class MusicDetail: UIViewController {
     @IBOutlet weak var btPrevious: UIButton!
     @IBOutlet weak var btNext: UIButton!
     @IBOutlet weak var btLoved: UIButton!
+    private var isPlayAudio: Bool = false
     private var dataSource: [MusicModel] = []
     private var isEndAudio: PublishSubject<Bool> = PublishSubject.init()
     var currentIndex: IndexPath = IndexPath(row: 0, section: 0)
@@ -164,22 +165,41 @@ extension MusicDetail {
             wSelf.lbEnd.text = "\(m):\(s)"
         }.disposed(by: disposeBag)
         
-        slideMusic.rx.value.bind { [weak self](value) in
-            guard let wSelf = self else {
-                return
-            }
+        slideMusic.rx.value.bind { (value) in
             MusicStreamIpl.share.audio?.pause()
             MusicStreamIpl.share.audio?.currentTime = TimeInterval(value)
             MusicStreamIpl.share.audio?.play()
         }.disposed(by: disposeBag)
         
+        MusicStreamIpl.share.isPlaying.bind(onNext: weakify({ (isPlay, wSelf) in
+            wSelf.isPlayAudio = isPlay
+            guard isPlay else {
+                wSelf.btPause.setImage(UIImage(named: "ic_resume"), for: .normal)
+                return
+            }
+            wSelf.btPause.setImage(UIImage(named: "ic_play"), for: .normal)
+        })).disposed(by: disposeBag)
+        
+        btPause.rx.tap.map { return self.isPlayAudio
+         }.bind(onNext: weakify({ (isPlay, wSelf) in
+             guard isPlay else {
+                 wSelf.btPause.setImage(UIImage(named: "ic_resume"), for: .normal)
+                 MusicStreamIpl.share.playingAudio()
+                 return
+             }
+             wSelf.btPause.setImage(UIImage(named: "ic_play"), for: .normal)
+             MusicStreamIpl.share.stopAudio()
+         })).disposed(by: disposeBag)
+        
         self.btPause.rx.tap.bind(onNext: weakify { wSelf in
             if wSelf.btPause.isSelected {
                 wSelf.btPause.isSelected = false
-                wSelf.player?.play()
+                MusicStreamIpl.share.playingAudio()
+                wSelf.btPause.setImage(UIImage(named: "ic_resume"), for: .normal)
             } else {
+                wSelf.btPause.setImage(UIImage(named: "ic_play"), for: .normal)
                 wSelf.btPause.isSelected = true
-                wSelf.player?.pause()
+                MusicStreamIpl.share.stopAudio()
             }
         }).disposed(by: disposeBag)
         
