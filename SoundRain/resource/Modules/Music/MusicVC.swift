@@ -18,14 +18,18 @@ class MusicVC: UIViewController {
     private var dataSource: [MusicModel] = []
     private var collectionView: UICollectionView!
     private let disposeBag = DisposeBag()
-    private var musicStream: MusicStreamIpl?
     private var vPlayCurrent: UIView = UIView.init()
+    private let img: UIImageView = UIImageView(frame: .zero)
+    private let lbNameMusic: UILabel = UILabel.init(frame: .zero)
+    private let lbTimeMusic: UILabel = UILabel.init(frame: .zero)
+    private let btPlay: UIButton = UIButton.init(frame: .zero)
+    private var currentIndexItem: IndexPath?
     private var update: PublishSubject<Bool> = PublishSubject.init()
     override func viewDidLoad() {
         super.viewDidLoad()
         visualize()
-        musicStream = MusicStreamIpl.init()
         setupRX()
+        MusicStreamIpl.share.setupRX()
 //        let ryan = Student(score: BehaviorSubject(value: 80))
 //        let charlotte = Student(score: BehaviorSubject(value: 90))
 
@@ -56,7 +60,7 @@ class MusicVC: UIViewController {
 //        charlotte.score.onNext(95)
     }
     override func viewWillAppear(_ animated: Bool) {
-        self.musicStream?.maxValueSlider.asObserver().bind(onNext: weakify({ (value, wSelf) in
+        MusicStreamIpl.share.maxValueSlider.asObserver().bind(onNext: weakify({ (value, wSelf) in
             guard value > 0 else {
                 return
             }
@@ -98,6 +102,7 @@ extension MusicVC {
         collectionView.backgroundColor = .red
         
         vPlayCurrent.backgroundColor = #colorLiteral(red: 0.1450980392, green: 0.137254902, blue: 0.2901960784, alpha: 1)
+        vPlayCurrent.isHidden = true
         self.view.addSubview(vPlayCurrent)
         vPlayCurrent.snp.makeConstraints { (make) in
             make.left.right.equalToSuperview()
@@ -105,7 +110,7 @@ extension MusicVC {
             make.height.equalTo(70)
         }
         
-        let img: UIImageView = UIImageView(frame: .zero)
+        
         img.backgroundColor = .red
         self.vPlayCurrent.addSubview(img)
         img.snp.makeConstraints { (make) in
@@ -114,7 +119,7 @@ extension MusicVC {
             make.width.equalTo(54)
         }
         
-        let lbNameMusic: UILabel = UILabel.init(frame: .zero)
+        
         lbNameMusic.text = "Hải"
         self.vPlayCurrent.addSubview(lbNameMusic)
         lbNameMusic.snp.makeConstraints { (make) in
@@ -122,7 +127,7 @@ extension MusicVC {
             make.left.equalTo(img.snp.right).inset(-16)
         }
         
-        let lbTimeMusic: UILabel = UILabel.init(frame: .zero)
+        
         lbTimeMusic.text = "10:00"
         self.vPlayCurrent.addSubview(lbTimeMusic)
         lbTimeMusic.snp.makeConstraints { (make) in
@@ -130,8 +135,8 @@ extension MusicVC {
             make.left.equalTo(img.snp.right).inset(-16)
         }
         
-        let btPlay: UIButton = UIButton.init(frame: .zero)
-        btPlay.backgroundColor = .red
+        
+        btPlay.setImage(UIImage(named: "ic_next"), for: .normal)
         self.vPlayCurrent.addSubview(btPlay)
         btPlay.snp.makeConstraints { (make) in
             make.right.equalToSuperview().inset(16)
@@ -145,7 +150,7 @@ extension MusicVC {
         
     }
     private func setupRX() {
-        musicStream?.dataSource.asObserver()
+        MusicStreamIpl.share.dataSource.asObserver()
             .bind(to: collectionView.rx.items(cellIdentifier: MusicCell.identifier, cellType: MusicCell.self)) { (row, element, cell) in
                 cell.updateUI(model: element)
         }.disposed(by: disposeBag)
@@ -157,12 +162,38 @@ extension MusicVC {
             self.navigationController?.pushViewController(vc, animated: true)
         }.disposed(by: disposeBag)
         
+        btPlay.rx.tap.bind(onNext: weakify({ (wSelf) in
+            guard var nextItem = self.currentIndexItem else {
+                return
+            }
+            nextItem.row += 1
+            MusicStreamIpl.share.getIndex(idx: nextItem)
+            })).disposed(by: disposeBag)
         
+        
+        let item = MusicStreamIpl.share.item
+        let idx = MusicStreamIpl.share.currentIndexItem
+        let d = MusicStreamIpl.share.dataSource.asObserver()
+        
+        Observable.combineLatest(item, idx, d).bind { [weak self] (item, idx, datas) in
+            guard let wSelf = self else {
+                return
+            }
+            wSelf.vPlayCurrent.isHidden = false
+            wSelf.img.loadhinh(link: item.img ?? "")
+            wSelf.lbNameMusic.text = item.title ?? ""
+            wSelf.currentIndexItem = idx
+            
+            guard idx.row == datas.count - 1 else {
+                wSelf.btPlay.isEnabled = true
+                return
+            }
+            wSelf.btPlay.isEnabled = false
+        }.disposed(by: disposeBag)
     }
 }
 extension MusicVC: MusicDetailDelegate {
     func callBack() {
-        self.update.onNext(true)
     }
 }
 struct Student {

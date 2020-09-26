@@ -18,14 +18,28 @@ import Alamofire
 protocol MusicStream {
     var dataSource: BehaviorSubject<[MusicModel]> { get }
     //    func playIndexItem(idx: IndexPath)
+    var item: Observable<MusicModel> { get }
+    var currentIndexItem: Observable<IndexPath> { get }
 }
 final class MusicStreamIpl: MusicStream {
+    public static var share = MusicStreamIpl()
+    var item: Observable<MusicModel> {
+        return self.$itemOb
+    }
+    var currentIndexItem: Observable<IndexPath> {
+        return self.$currentIndex
+    }
+    
+    @Replay(queue: MainScheduler.asyncInstance) private var itemOb: MusicModel
+    @Replay(queue: MainScheduler.asyncInstance) private var currentIndex: IndexPath
+    private var aaa: BehaviorRelay<MusicModel?> = BehaviorRelay(value: nil)
     var dataSource: BehaviorSubject<[MusicModel]> = BehaviorSubject.init(value: [])
     private var mSource: [MusicModel] = []
     var miniValue: TimeInterval = 0
     var maxValue: TimeInterval = 0
 //    private var miniValueObs: PublishSubject<TimeInterval> = PublishSubject.init()
 //    private var maxValueObs: PublishSubject<TimeInterval> = PublishSubject.init()
+    var itemCheck = ReplaySubject<String?>.create(bufferSize: 1)
     var maxValueSlider: PublishSubject<Double> = PublishSubject.init()
     var listMusiceFavourite: BehaviorRelay<[MusicModel]> = BehaviorRelay.init(value: [])
     var listLoved: [MusicModel] = []
@@ -34,10 +48,6 @@ final class MusicStreamIpl: MusicStream {
     var audio: AVAudioPlayer?
     let data = ExampleData2()
     private let disposeBag = DisposeBag()
-    init() {
-        dummyData()
-        setupRX()
-    }
 }
 extension MusicStreamIpl {
     private func dummyData() {
@@ -50,7 +60,8 @@ extension MusicStreamIpl {
             }
         }
     }
-    private func setupRX() {
+    func setupRX() {
+        dummyData()
         
         self.listMusiceFavourite.asObservable().bind { (value) in
             self.listLoved = value
@@ -152,9 +163,14 @@ extension MusicStreamIpl {
         })
     }
    func getIndex(idx: IndexPath) {
+    self.itemCheck.onNext("sssss")
+    
         guard let text = self.mSource[idx.row].url else {
             return
         }
+    let item = self.mSource[idx.row]
+    self.itemOb = item
+    self.currentIndex = idx
         self.playSound(text: text)
     }
     
@@ -231,4 +247,19 @@ extension MusicStreamIpl {
         return nil
     }
 }
+
+protocol checkaaa {
+    var item: Observable<Int> { get }
+}
+
+class checkOb {
+    public static var share = checkOb()
+    var it: ReplaySubject<[Int]> = ReplaySubject.create(bufferSize: 1)
+}
+extension checkOb {
+    func setup() {
+        self.it.onNext([1,2])
+    }
+}
+
 

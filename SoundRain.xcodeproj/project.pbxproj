@@ -31,6 +31,7 @@
 		1B87FAD524F1610E00515716 /* MusicVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B87FAD424F1610E00515716 /* MusicVC.swift */; };
 		1B87FAD724F1611D00515716 /* PostProductVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B87FAD624F1611D00515716 /* PostProductVC.swift */; };
 		52A818292D7DAC78C0036958 /* Pods_SoundRain.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0BF57AA65E00EC655E881BE2 /* Pods_SoundRain.framework */; };
+		931DEA66251CE3FB00D3B729 /* property.swift in Sources */ = {isa = PBXBuildFile; fileRef = 931DEA65251CE3FB00D3B729 /* property.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -62,6 +63,7 @@
 		1B87FAD624F1611D00515716 /* PostProductVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostProductVC.swift; sourceTree = "<group>"; };
 		4B33649669306461DC1D1B61 /* Pods-SoundRain.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SoundRain.release.xcconfig"; path = "Target Support Files/Pods-SoundRain/Pods-SoundRain.release.xcconfig"; sourceTree = "<group>"; };
 		55C25584C636C27D1653419D /* Pods-SoundRain.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SoundRain.debug.xcconfig"; path = "Target Support Files/Pods-SoundRain/Pods-SoundRain.debug.xcconfig"; sourceTree = "<group>"; };
+		931DEA65251CE3FB00D3B729 /* property.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = property.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -174,6 +176,7 @@
 		1B87FAC924F15B9400515716 /* resource */ = {
 			isa = PBXGroup;
 			children = (
+				931DEA64251CE3E700D3B729 /* Wrapper */,
 				1B444F1F24F2A6B1004F84F8 /* Data */,
 				1B87FACA24F15BAD00515716 /* Extension.swift */,
 				1B7C2E5C24FF44B4002B4539 /* HeaderCornerView.swift */,
@@ -219,6 +222,14 @@
 				1B87FAD624F1611D00515716 /* PostProductVC.swift */,
 			);
 			path = PostProduct;
+			sourceTree = "<group>";
+		};
+		931DEA64251CE3E700D3B729 /* Wrapper */ = {
+			isa = PBXGroup;
+			children = (
+				931DEA65251CE3FB00D3B729 /* property.swift */,
+			);
+			path = Wrapper;
 			sourceTree = "<group>";
 		};
 		ABBA02FE26410B75A98F93EE /* Pods */ = {
@@ -389,6 +400,7 @@
 				1B87FAB124F157BD00515716 /* AppDelegate.swift in Sources */,
 				1B7C2E5D24FF44B4002B4539 /* HeaderCornerView.swift in Sources */,
 				1B7C2E5824FE9272002B4539 /* MusicStream.swift in Sources */,
+				931DEA66251CE3FB00D3B729 /* property.swift in Sources */,
 				1B87FAD724F1611D00515716 /* PostProductVC.swift in Sources */,
 				1B87FAB324F157BD00515716 /* SceneDelegate.swift in Sources */,
 			);
