@@ -17,10 +17,11 @@ import Alamofire
 
 protocol MusicStream {
     var dataSource: BehaviorSubject<[MusicModel]> { get }
-    //    func playIndexItem(idx: IndexPath)
     var item: Observable<MusicModel> { get }
     var currentIndexItem: Observable<IndexPath> { get }
     var isPlaying: Observable<Bool> { get }
+    var isEndAudio: Observable<Bool> { get }
+    var currentTime: Observable<TimeInterval> { get }
 }
 final class MusicStreamIpl: MusicStream {
     public static var share = MusicStreamIpl()
@@ -34,9 +35,17 @@ final class MusicStreamIpl: MusicStream {
     var isPlaying: Observable<Bool> {
         return self.$isPlay
     }
+    var isEndAudio: Observable<Bool> {
+        return self.$isEndAudioObser
+    }
+    var currentTime: Observable<TimeInterval> {
+        return self.$mCurrentTime
+    }
     @Replay(queue: MainScheduler.asyncInstance) private var itemOb: MusicModel
     @Replay(queue: MainScheduler.asyncInstance) private var currentIndex: IndexPath
     @Replay(queue: MainScheduler.asyncInstance) private var isPlay: Bool
+    @Replay(queue: MainScheduler.asyncInstance) var isEndAudioObser: Bool
+    @Replay(queue: MainScheduler.asyncInstance) private var mCurrentTime: TimeInterval
     private var aaa: BehaviorRelay<MusicModel?> = BehaviorRelay(value: nil)
     var dataSource: BehaviorSubject<[MusicModel]> = BehaviorSubject.init(value: [])
     private var mSource: [MusicModel] = []
@@ -81,6 +90,38 @@ extension MusicStreamIpl {
             }
             wSelf.mSource = datas
         }.disposed(by: disposeBag)
+        
+        let timer = Observable<Int>.interval(RxTimeInterval.milliseconds(1000), scheduler: MainScheduler.asyncInstance)
+        let isEndAudio = self.$isEndAudioObser
+        
+        Observable.combineLatest(timer, isEndAudio).bind { [weak self] (time, isEnd) in
+            guard !isEnd else {
+                return
+            }
+            
+            guard let wSelf = self else {
+                return
+            }
+            
+            guard let current = wSelf.audio?.currentTime else {
+                return
+            }
+            
+            wSelf.mCurrentTime = current
+            
+        }.disposed(by: disposeBag)
+        
+//        let end = NotificationCenter.rx.
+        
+//                NotificationCenter.default.rx.notification(NSNotification.Name.AVPlayerItemDidPlayToEndTime).bind { (isNo) in
+//                    print(isNo)
+//                }.disposed(by: disposeBag)
+//        timer.bind(onNext: { _ in
+//            print(self.audio?.currentTime)
+//            }).disposed(by: disposeBag)
+        
+//        NotificationCenter.default.addObserver(self, selector: #selector(playerDidFinishPlaying), name: .AVPlayerItemDidPlayToEndTime, object: nil)
+        
         
     }
     func updateListLove(item: MusicModel) {

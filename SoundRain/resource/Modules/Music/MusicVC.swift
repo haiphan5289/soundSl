@@ -29,8 +29,8 @@ class MusicVC: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         visualize()
-//        setupRX()
-//        MusicStreamIpl.share.setupRX()
+        setupRX()
+        MusicStreamIpl.share.setupRX()
         //        let ryan = Student(score: BehaviorSubject(value: 80))
         //        let charlotte = Student(score: BehaviorSubject(value: 90))
         
@@ -75,7 +75,7 @@ extension MusicVC {
         var hTabbar = self.tabBarController?.tabBar.frame.size.height ?? 49
         let window = UIApplication.shared.windows[0]
         let safeFrame = window.safeAreaLayoutGuide.layoutFrame
-        hTabbar = window.frame.maxY - safeFrame.maxY + 40
+        hTabbar = window.frame.maxY - safeFrame.maxY + 49
         
         self.view.backgroundColor = .white
         
@@ -223,21 +223,12 @@ extension MusicVC {
             wSelf.btNextItem.isEnabled = false
         }.disposed(by: disposeBag)
         
-        //        Observable.combineLatest(item, idx, d).bind { [weak self] (item, idx, datas) in
-        //            guard let wSelf = self else {
-        //                return
-        //            }
-        //            wSelf.vPlayCurrent.isHidden = false
-        //            wSelf.img.loadhinh(link: item.img ?? "")
-        //            wSelf.lbNameMusic.text = item.title ?? ""
-        //            wSelf.currentIndexItem = idx
-        //
-        //            guard idx.row == datas.count - 1 else {
-        //                wSelf.btNextItem.isEnabled = true
-        //                return
-        //            }
-        //            wSelf.btNextItem.isEnabled = false
-        //        }.disposed(by: disposeBag)
+        MusicStreamIpl.share.currentTime.bind(onNext: weakify({ (time, wSelf) in
+            let m = Int(time / 60)
+            let s = Int(time) % 60
+            wSelf.lbTimeMusic.text = "\(m):\(s)"
+            })).disposed(by: disposeBag)
+        
     }
 }
 extension MusicVC: MusicDetailDelegate {

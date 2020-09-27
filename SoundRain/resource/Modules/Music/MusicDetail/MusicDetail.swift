@@ -105,6 +105,7 @@ extension MusicDetail {
             }
         }
     private func setupRX() {
+        MusicStreamIpl.share.isEndAudioObser = false
         timer?.bind(onNext: { [weak self] (value) in
             guard let wSelf = self, let current = MusicStreamIpl.share.audio?.currentTime else {
                 return
@@ -141,18 +142,6 @@ extension MusicDetail {
             }
             MusicStreamIpl.share.audio?.play()
         })).disposed(by: disposeBag)
-        
-//        NotificationCenter.default.rx.notification(NSNotification.Name.AVPlayerItemDidPlayToEndTime).bind { (isNo) in
-//            print(isNo)
-//        }.disposed(by: disposeBag)
-        
-        
-//        NotificationCenter.default.addObserver(self, selector: Selector(("playerDidFinishPlaying:")),
-//               name: NSNotification.Name.AVAudio, object: player?.currentTime)
-//
-//        func playerDidFinishPlaying(note: NSNotification) {
-//            print("Video Finished")
-//        }
         
         MusicStreamIpl.share.maxValueSlider.asObserver().bind { [weak self] (value) in
             guard let wSelf = self else {
@@ -274,10 +263,15 @@ extension MusicDetail {
     private func playItem() {
         MusicStreamIpl.share.getIndex(idx: self.currentIndex)
     }
+    
+    @objc func playerDidFinishPlaying(){
+            print("Video Finished")
+        }
 }
 extension MusicDetail: AVAudioPlayerDelegate {
     func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
         isEndAudio.onNext(flag)
+        MusicStreamIpl.share.isEndAudioObser = flag
 //        print(flag)
 //        if isReplay {
 //            self.player?.pause()
