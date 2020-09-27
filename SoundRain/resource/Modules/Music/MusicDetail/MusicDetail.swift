@@ -43,10 +43,10 @@ final class MusicDetail: UIViewController {
         slideMusic.value = 0
         timer = Observable<Int>.interval(RxTimeInterval.milliseconds(1000), scheduler: MainScheduler.asyncInstance)
         setupRX()
-//        self.playSound(text: text)
+        //        self.playSound(text: text)
         checkOb.share.setup()
     }
-
+    
     override func viewWillAppear(_ animated: Bool) {
         self.navigationController?.setNavigationBarHidden(false, animated: true)
         //         let navigationBar = navigationController?.navigationBar
@@ -68,68 +68,78 @@ final class MusicDetail: UIViewController {
     }
 }
 extension MusicDetail {
-        func playIndexItem(idx: IndexPath) {
-
-            let itemPlay = dataSource[idx.row]
-            self.playSound(text: itemPlay.resource ?? "")
-            self.updateUIBUtton(idx: idx)
-        }
+    func playIndexItem(idx: IndexPath) {
         
-        func playSound(text: String) {
-            guard let url = Bundle.main.url(forResource: text, withExtension: "mp3") else { return }
+        let itemPlay = dataSource[idx.row]
+        self.playSound(text: itemPlay.resource ?? "")
+        self.updateUIBUtton(idx: idx)
+    }
     
-            do {
-                try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
-                try AVAudioSession.sharedInstance().setActive(true)
-    
-                /* The following line is required for the player to work on iOS 11. Change the file type accordingly*/
-                player = try AVAudioPlayer(contentsOf: url, fileTypeHint: AVFileType.mp3.rawValue)
-    
-                /* iOS 10 and earlier require the following line:
-                player = try AVAudioPlayer(contentsOf: url, fileTypeHint: AVFileTypeMPEGLayer3) */
-    
-                guard let player = player else { return }
-    
-                player.pause()
-                player.delegate = self
-
-                slideMusic.minimumValue = 0
-                slideMusic.maximumValue = Float(player.duration)
-                let m = Int(player.duration / 60)
-                let s = Int(player.duration) % 60
-                lbEnd.text = "\(m):\(s)"
-                player.play()
-                timer = Observable<Int>.interval(RxTimeInterval.milliseconds(1000), scheduler: MainScheduler.asyncInstance)
-            } catch let error {
-                print(error.localizedDescription)
-            }
+    func playSound(text: String) {
+        guard let url = Bundle.main.url(forResource: text, withExtension: "mp3") else { return }
+        
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
+            try AVAudioSession.sharedInstance().setActive(true)
+            
+            /* The following line is required for the player to work on iOS 11. Change the file type accordingly*/
+            player = try AVAudioPlayer(contentsOf: url, fileTypeHint: AVFileType.mp3.rawValue)
+            
+            /* iOS 10 and earlier require the following line:
+             player = try AVAudioPlayer(contentsOf: url, fileTypeHint: AVFileTypeMPEGLayer3) */
+            
+            guard let player = player else { return }
+            
+            player.pause()
+            player.delegate = self
+            
+            slideMusic.minimumValue = 0
+            slideMusic.maximumValue = Float(player.duration)
+            let m = Int(player.duration / 60)
+            let s = Int(player.duration) % 60
+            lbEnd.text = "\(m):\(s)"
+            player.play()
+            timer = Observable<Int>.interval(RxTimeInterval.milliseconds(1000), scheduler: MainScheduler.asyncInstance)
+        } catch let error {
+            print(error.localizedDescription)
         }
+    }
     private func setupRX() {
         MusicStreamIpl.share.isEndAudioObser = false
-        timer?.bind(onNext: { [weak self] (value) in
-            guard let wSelf = self, let current = MusicStreamIpl.share.audio?.currentTime else {
+        //        timer?.bind(onNext: { [weak self] (value) in
+        //            guard let wSelf = self, let current = MusicStreamIpl.share.audio?.currentTime else {
+        //                return
+        //            }
+        //            wSelf.slideMusic.value = Float(CGFloat(current))
+        //            let m = Int(current / 60)
+        //            let s = Int(current) % 60
+        //            wSelf.lbStart.text = "\(m):\(s)"
+        //
+        ////            guard current == wSelf.MusicStreamIpl.share.audio?.duration  else {
+        ////                wSelf.slideMusic.value = Float(CGFloat(current))
+        ////                return
+        ////            }
+        ////            print("\(wSelf.slideMusic.value) ===== \(current) ====== \(wSelf.slideMusic.maximumValue)")
+        ////
+        ////            guard !wSelf.isReplay else {
+        ////                wSelf.player?.pause()
+        ////                return
+        ////            }
+        ////
+        ////            wSelf.slideMusic.value = 0
+        ////            current = 0
+        ////            wSelf.player?.play()
+        //        }).disposed(by: disposeBag)
+        
+        MusicStreamIpl.share.currentTime.bind(onNext: weakify({ (value, wSelf) in
+            guard let current = MusicStreamIpl.share.audio?.currentTime else {
                 return
             }
             wSelf.slideMusic.value = Float(CGFloat(current))
             let m = Int(current / 60)
             let s = Int(current) % 60
-            wSelf.lbStart.text = "\(m):\(s)"
-            
-//            guard current == wSelf.MusicStreamIpl.share.audio?.duration  else {
-//                wSelf.slideMusic.value = Float(CGFloat(current))
-//                return
-//            }
-//            print("\(wSelf.slideMusic.value) ===== \(current) ====== \(wSelf.slideMusic.maximumValue)")
-//
-//            guard !wSelf.isReplay else {
-//                wSelf.player?.pause()
-//                return
-//            }
-//
-//            wSelf.slideMusic.value = 0
-//            current = 0
-//            wSelf.player?.play()
-        }).disposed(by: disposeBag)
+            wSelf.lbStart.text = String(format: "%d:%d", m, s)
+        })).disposed(by: disposeBag)
         
         isEndAudio.asObserver().bind(onNext: weakify({ (isEnd, wSelf) in
             guard isEnd else {
@@ -143,7 +153,7 @@ extension MusicDetail {
             MusicStreamIpl.share.audio?.play()
         })).disposed(by: disposeBag)
         
-        MusicStreamIpl.share.maxValueSlider.asObserver().bind { [weak self] (value) in
+        MusicStreamIpl.share.maxValueAudio.bind { [weak self] (value) in
             guard let wSelf = self else {
                 return
             }
@@ -170,15 +180,15 @@ extension MusicDetail {
         })).disposed(by: disposeBag)
         
         btPause.rx.tap.map { return self.isPlayAudio
-         }.bind(onNext: weakify({ (isPlay, wSelf) in
-             guard isPlay else {
-                 wSelf.btPause.setImage(UIImage(named: "ic_resume"), for: .normal)
-                 MusicStreamIpl.share.playingAudio()
-                 return
-             }
-             wSelf.btPause.setImage(UIImage(named: "ic_play"), for: .normal)
-             MusicStreamIpl.share.stopAudio()
-         })).disposed(by: disposeBag)
+        }.bind(onNext: weakify({ (isPlay, wSelf) in
+            guard isPlay else {
+                wSelf.btPause.setImage(UIImage(named: "ic_resume"), for: .normal)
+                MusicStreamIpl.share.playingAudio()
+                return
+            }
+            wSelf.btPause.setImage(UIImage(named: "ic_play"), for: .normal)
+            MusicStreamIpl.share.stopAudio()
+        })).disposed(by: disposeBag)
         
         self.btPause.rx.tap.bind(onNext: weakify { wSelf in
             if wSelf.btPause.isSelected {
@@ -211,16 +221,16 @@ extension MusicDetail {
             vc.delegate = self
             self.present(vc, animated: true, completion: nil)
         }.disposed(by: disposeBag)
-
-//        MusicStreamIpl.share.dataSource.asObserver().bind(onNext: weakify({ (data, wSelf) in
-//            wSelf.dataSource = data
-////            wSelf.playSound(text: data[wSelf.currentIndex.row].resource ?? "")
-//            wSelf.updateUIBUtton(idx: wSelf.currentIndex)
-//            guard let firstItem = data.first, let resource = firstItem.url else {
-//                return
-//            }
-//            wSelf.MusicStreamIpl.share.playSound(text: resource)
-//            })).disposed(by: disposeBag)
+        
+        //        MusicStreamIpl.share.dataSource.asObserver().bind(onNext: weakify({ (data, wSelf) in
+        //            wSelf.dataSource = data
+        ////            wSelf.playSound(text: data[wSelf.currentIndex.row].resource ?? "")
+        //            wSelf.updateUIBUtton(idx: wSelf.currentIndex)
+        //            guard let firstItem = data.first, let resource = firstItem.url else {
+        //                return
+        //            }
+        //            wSelf.MusicStreamIpl.share.playSound(text: resource)
+        //            })).disposed(by: disposeBag)
         
         btPrevious.rx.tap.bind(onNext: weakify({ (wSelf) in
             switch wSelf.currentIndex.row {
@@ -230,7 +240,7 @@ extension MusicDetail {
                 wSelf.currentIndex.row -= 1
             }
             wSelf.playIndexItem(idx: wSelf.currentIndex)
-            })).disposed(by: disposeBag)
+        })).disposed(by: disposeBag)
         
         btNext.rx.tap.bind(onNext: weakify({ (wSelf) in
             switch wSelf.currentIndex.row {
@@ -239,7 +249,7 @@ extension MusicDetail {
             default:
                 wSelf.currentIndex.row += 1
             }
-//        let idx = IndexPath(row: wSelf.currentIndex.row + 1, section: wSelf.currentIndex.section)
+            //        let idx = IndexPath(row: wSelf.currentIndex.row + 1, section: wSelf.currentIndex.section)
             wSelf.playIndexItem(idx: wSelf.currentIndex)
         })).disposed(by: disposeBag)
         
@@ -248,14 +258,14 @@ extension MusicDetail {
             if wSelf.btLoved.isSelected {
                 MusicStreamIpl.share.removeListLove(item: item)
                 wSelf.btLoved.setTitle("Thêm vào", for: .normal)
-                  wSelf.btLoved.isSelected = false
+                wSelf.btLoved.isSelected = false
             } else {
-              MusicStreamIpl.share.updateListLove(item: item)
+                MusicStreamIpl.share.updateListLove(item: item)
                 wSelf.btLoved.setTitle("Đã thêm", for: .selected)
                 wSelf.btLoved.isSelected = true
             }
             
-            })).disposed(by: disposeBag)
+        })).disposed(by: disposeBag)
         
         self.playItem()
         
@@ -265,18 +275,18 @@ extension MusicDetail {
     }
     
     @objc func playerDidFinishPlaying(){
-            print("Video Finished")
-        }
+        print("Video Finished")
+    }
 }
 extension MusicDetail: AVAudioPlayerDelegate {
     func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
         isEndAudio.onNext(flag)
         MusicStreamIpl.share.isEndAudioObser = flag
-//        print(flag)
-//        if isReplay {
-//            self.player?.pause()
-//            self.player?.play()
-//        }
+        //        print(flag)
+        //        if isReplay {
+        //            self.player?.pause()
+        //            self.player?.play()
+        //        }
     }
 }
 extension MusicDetail: ListMusicDelegate {

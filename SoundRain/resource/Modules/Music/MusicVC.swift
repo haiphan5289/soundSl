@@ -61,7 +61,7 @@ class MusicVC: UIViewController {
         //        charlotte.score.onNext(95)
     }
     override func viewWillAppear(_ animated: Bool) {
-        MusicStreamIpl.share.maxValueSlider.asObserver().bind(onNext: weakify({ (value, wSelf) in
+        MusicStreamIpl.share.maxValueAudio.bind(onNext: weakify({ (value, wSelf) in
             guard value > 0 else {
                 return
             }
@@ -135,7 +135,7 @@ extension MusicVC {
         }
 
 
-        lbTimeMusic.text = "10:00"
+        lbTimeMusic.text = "99:99"
         self.vPlayCurrent.addSubview(lbTimeMusic)
         lbTimeMusic.snp.makeConstraints { (make) in
             make.bottom.equalTo(img)

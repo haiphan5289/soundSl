@@ -22,6 +22,7 @@ protocol MusicStream {
     var isPlaying: Observable<Bool> { get }
     var isEndAudio: Observable<Bool> { get }
     var currentTime: Observable<TimeInterval> { get }
+    var maxValueAudio: Observable<Double> { get }
 }
 final class MusicStreamIpl: MusicStream {
     public static var share = MusicStreamIpl()
@@ -41,20 +42,25 @@ final class MusicStreamIpl: MusicStream {
     var currentTime: Observable<TimeInterval> {
         return self.$mCurrentTime
     }
+    var maxValueAudio: Observable<Double> {
+        return self.$maxValueSlider
+    }
     @Replay(queue: MainScheduler.asyncInstance) private var itemOb: MusicModel
     @Replay(queue: MainScheduler.asyncInstance) private var currentIndex: IndexPath
     @Replay(queue: MainScheduler.asyncInstance) private var isPlay: Bool
     @Replay(queue: MainScheduler.asyncInstance) var isEndAudioObser: Bool
     @Replay(queue: MainScheduler.asyncInstance) private var mCurrentTime: TimeInterval
+    @Replay(queue: MainScheduler.asyncInstance) private var maxValueSlider: Double
+    private var mCurrentIndex: IndexPath?
     private var aaa: BehaviorRelay<MusicModel?> = BehaviorRelay(value: nil)
     var dataSource: BehaviorSubject<[MusicModel]> = BehaviorSubject.init(value: [])
     private var mSource: [MusicModel] = []
     var miniValue: TimeInterval = 0
     var maxValue: TimeInterval = 0
-//    private var miniValueObs: PublishSubject<TimeInterval> = PublishSubject.init()
-//    private var maxValueObs: PublishSubject<TimeInterval> = PublishSubject.init()
+    //    private var miniValueObs: PublishSubject<TimeInterval> = PublishSubject.init()
+    //    private var maxValueObs: PublishSubject<TimeInterval> = PublishSubject.init()
     var itemCheck = ReplaySubject<String?>.create(bufferSize: 1)
-    var maxValueSlider: PublishSubject<Double> = PublishSubject.init()
+//    var maxValueSlider: PublishSubject<Double> = PublishSubject.init()
     var listMusiceFavourite: BehaviorRelay<[MusicModel]> = BehaviorRelay.init(value: [])
     var listLoved: [MusicModel] = []
     var names: Results<MyObject>?
@@ -111,16 +117,16 @@ extension MusicStreamIpl {
             
         }.disposed(by: disposeBag)
         
-//        let end = NotificationCenter.rx.
+        //        let end = NotificationCenter.rx.
         
-//                NotificationCenter.default.rx.notification(NSNotification.Name.AVPlayerItemDidPlayToEndTime).bind { (isNo) in
-//                    print(isNo)
-//                }.disposed(by: disposeBag)
-//        timer.bind(onNext: { _ in
-//            print(self.audio?.currentTime)
-//            }).disposed(by: disposeBag)
+        //                NotificationCenter.default.rx.notification(NSNotification.Name.AVPlayerItemDidPlayToEndTime).bind { (isNo) in
+        //                    print(isNo)
+        //                }.disposed(by: disposeBag)
+        //        timer.bind(onNext: { _ in
+        //            print(self.audio?.currentTime)
+        //            }).disposed(by: disposeBag)
         
-//        NotificationCenter.default.addObserver(self, selector: #selector(playerDidFinishPlaying), name: .AVPlayerItemDidPlayToEndTime, object: nil)
+        //        NotificationCenter.default.addObserver(self, selector: #selector(playerDidFinishPlaying), name: .AVPlayerItemDidPlayToEndTime, object: nil)
         
         
     }
@@ -208,15 +214,16 @@ extension MusicStreamIpl {
             print(item.name)
         })
     }
-   func getIndex(idx: IndexPath) {
-    self.itemCheck.onNext("sssss")
-    
-        guard let text = self.mSource[idx.row].url else {
+    func getIndex(idx: IndexPath) {
+        self.itemCheck.onNext("sssss")
+        
+        guard let text = self.mSource[idx.row].url, self.mCurrentIndex != idx else {
             return
         }
-    let item = self.mSource[idx.row]
-    self.itemOb = item
-    self.currentIndex = idx
+        let item = self.mSource[idx.row]
+        self.itemOb = item
+        self.currentIndex = idx
+        self.mCurrentIndex = idx
         self.playSound(text: text)
     }
     
@@ -240,9 +247,9 @@ extension MusicStreamIpl {
         //                player.pause()
         ////                slideMusic.minimumValue = 0
         ////                slideMusic.maximumValue = Float(player.duration)
-//                        let m = Int(player.duration / 60)
-//                        let s = Int(player.duration) % 60
-//                        lbEnd.text = "\(m):\(s)"
+        //                        let m = Int(player.duration / 60)
+        //                        let s = Int(player.duration) % 60
+        //                        lbEnd.text = "\(m):\(s)"
         //                player.play()
         ////                timer = Observable<Int>.interval(RxTimeInterval.milliseconds(1000), scheduler: MainScheduler.asyncInstance)
         //            } catch let error {
@@ -272,7 +279,7 @@ extension MusicStreamIpl {
             guard let max = audio?.duration else {
                 return
             }
-            self.maxValueSlider.onNext(max)
+            self.maxValueSlider = max
         } catch let error as NSError {
             print(error.localizedDescription)
         } catch {
