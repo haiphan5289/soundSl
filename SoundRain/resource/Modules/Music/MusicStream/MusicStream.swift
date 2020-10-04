@@ -46,11 +46,13 @@ final class MusicStreamIpl: MusicStream {
         return self.$maxValueSlider
     }
     @Replay(queue: MainScheduler.asyncInstance) private var itemOb: MusicModel
+    private var itemCurrent: MusicModel?
     @Replay(queue: MainScheduler.asyncInstance) private var currentIndex: IndexPath
     @Replay(queue: MainScheduler.asyncInstance) private var isPlay: Bool
     @Replay(queue: MainScheduler.asyncInstance) var isEndAudioObser: Bool
     @Replay(queue: MainScheduler.asyncInstance) private var mCurrentTime: TimeInterval
     @Replay(queue: MainScheduler.asyncInstance) private var maxValueSlider: Double
+    @ReplayA(bufferSize: 1, queue: MainScheduler.asyncInstance) private var isANH: Bool
     private var mCurrentIndex: IndexPath?
     private var aaa: BehaviorRelay<MusicModel?> = BehaviorRelay(value: nil)
     var dataSource: BehaviorSubject<[MusicModel]> = BehaviorSubject.init(value: [])
@@ -67,6 +69,7 @@ final class MusicStreamIpl: MusicStream {
     let realm = try! Realm()
     var audio: AVAudioPlayer?
     let data = ExampleData2()
+    private let objectsRealmList = List<MyObject>()
     private let disposeBag = DisposeBag()
 }
 extension MusicStreamIpl {
@@ -86,8 +89,8 @@ extension MusicStreamIpl {
         self.listMusiceFavourite.asObservable().bind { (value) in
             self.listLoved = value
             self.writeRealm(list: value)
-            self.arrayToList()
-            self.loadPeople()
+//            self.arrayToList()
+//            self.loadPeople()
         }.disposed(by: disposeBag)
         
         self.dataSource.asObserver().bind { [weak self] (datas) in
@@ -185,15 +188,21 @@ extension MusicStreamIpl {
     //    }
     func arrayToList() {
         let b = LisResourceItem()
-        b.key = "hải"
-        b.value = "phan"
+//        dynamic var img = ""
+//        dynamic var title = ""
+//        dynamic var resource = ""
+//        dynamic var url = ""
+        b.img = "hải"
+        b.title = "phan"
+        b.resource = "hải"
+        b.url = "phan"
         let c = MyObject()
         c.name.append(b)
         let objectsArray = [MyObject(), MyObject(), MyObject(), MyObject(), MyObject(), c]
         //        let a: MyObject = MyObject()
         //        a.name = 1
         //        let objectsArray = [a, a]
-        let objectsRealmList = List<MyObject>()
+        
         
         // this one is illegal
         //objectsRealmList = objectsArray
@@ -222,15 +231,17 @@ extension MusicStreamIpl {
         }
         let item = self.mSource[idx.row]
         self.itemOb = item
+        self.itemCurrent = item
         self.currentIndex = idx
         self.mCurrentIndex = idx
         self.playSound(text: text)
     }
     
     private func playSound(text: String) {
-        guard  let url = URL(string: text) else {
+        guard  let url = URL(string: text), self.names == nil else {
             return
         }
+        
         downloadFileFromURL(url: url)
         
         //            do {
@@ -257,15 +268,27 @@ extension MusicStreamIpl {
         //            }
     }
     private func downloadFileFromURL(url:URL){
+        
         let destination: DownloadRequest.DownloadFileDestination = { _, _ in
             var documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
             documentsURL.appendPathComponent("file.csv")
             return (documentsURL, [.removePreviousFile])
         }
         
-        Alamofire.download(url, to: destination).responseData { response in
+        Alamofire.download(url, to: destination).responseData { [self] response in
             if let destinationUrl = response.destinationURL {
                 self.play(url: destinationUrl.absoluteURL)
+                
+                let item = self.itemCurrent
+                let itemRealm = LisResourceItem()
+                itemRealm.img = item?.img ?? ""
+                itemRealm.resource = item?.resource ?? ""
+                itemRealm.title = item?.title ?? ""
+                itemRealm.url = item?.url ?? ""
+                
+                try! realm.write {
+                    realm.create(MyObject.self, value: itemRealm, update: .all)
+                }
             }
         }
         
@@ -324,5 +347,55 @@ extension checkOb {
         self.it.onNext([1,2])
     }
 }
+
+@propertyWrapper
+struct ReplayA<T> {
+    private let _event: ReplaySubject<T>
+    private let queue: ImmediateSchedulerType
+    init(bufferSize: Int, queue: ImmediateSchedulerType) {
+        self.queue = queue
+        _event = ReplaySubject<T>.create(bufferSize: bufferSize)
+    }
+    var wrappedValue: T {
+        get {
+            fatalError("Do not get value from this!!!!")
+        }
+
+        set {
+            _event.onNext(newValue)
+        }
+    }
+    
+    var projectedValue: Observable<T> {
+        return _event.observeOn(queue)
+    }
+}
+//struct Replaya<T> {
+//    private let _event: ReplaySubject<T>
+//    private let queue: ImmediateSchedulerType
+//    init(bufferSize: Int, queue: ImmediateSchedulerType) {
+//        self.queue = queue
+//        _event = ReplaySubject<T>.create(bufferSize: bufferSize)
+//    }
+//
+//    init(queue: ImmediateSchedulerType) {
+//        self.queue = queue
+//       _event = ReplaySubject<T>.create(bufferSize: 1)
+//    }
+//
+//    var wrappedValue: T {
+//        get {
+//            fatalError("Do not get value from this!!!!")
+//        }
+//
+//        set {
+//            _event.onNext(newValue)
+//        }
+//    }
+//
+//    var projectedValue: Observable<T> {
+//        return _event.observeOn(queue)
+//    }
+//}
 
 

@@ -22,8 +22,10 @@ class ExampleData2: Object {
 }
 @objcMembers
 final class LisResourceItem: Object {
-    dynamic var key = ""
-    dynamic var value = ""
+    dynamic var img = ""
+    dynamic var title = ""
+    dynamic var resource = ""
+    dynamic var url = ""
 }
 @objcMembers
 class MyObject: Object {
