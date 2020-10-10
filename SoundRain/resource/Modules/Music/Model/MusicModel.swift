@@ -6,15 +6,14 @@
 //  Copyright © 2020 Phan Hai. All rights reserved.
 //
 
+import Alamofire
+import UIKit
+
 struct MusicModel: Codable {
     let img: String?
     let title: String?
     let resource: String?
-    let url: String?
-    
-    func aaa() {
-        
-    }
+    var url: String?
     
     enum CodingKeys: String, CodingKey {
         case img, title, resource, url

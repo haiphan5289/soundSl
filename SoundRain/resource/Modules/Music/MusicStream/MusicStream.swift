@@ -78,8 +78,12 @@ extension MusicStreamIpl {
         let dataBase = Database.database().reference()
         dataBase.child("\(FirebaseTable.sound.table)").observe(.childAdded) { (snapShot) in
             if let user = self.convertDataSnapshotToCodable(data: snapShot, type: MusicModel.self) {
-                data.append(user)
-                self.dataSource.onNext(data)
+                var item = user
+                self.getUrl(item: item) { (txtUrl) in
+                    item.url = txtUrl
+                    data.append(item)
+                    self.dataSource.onNext(data)
+                }
             }
         }
     }
@@ -88,17 +92,20 @@ extension MusicStreamIpl {
         
         self.listMusiceFavourite.asObservable().bind { (value) in
             self.listLoved = value
-            self.writeRealm(list: value)
+//            self.writeRealm(list: value)
 //            self.arrayToList()
 //            self.loadPeople()
         }.disposed(by: disposeBag)
         
-        self.dataSource.asObserver().bind { [weak self] (datas) in
-            guard let wSelf = self else {
-                return
-            }
-            wSelf.mSource = datas
-        }.disposed(by: disposeBag)
+        self.dataSource.asObserver()
+            .filter { $0.count > 0 }
+            .debounce(.seconds(3), scheduler: ConcurrentDispatchQueueScheduler.init(qos: .background))
+            .bind { [weak self] (list) in
+                guard let wSelf = self else {
+                    return
+                }
+                wSelf.mSource = list
+            }.disposed(by: disposeBag)
         
         let timer = Observable<Int>.interval(RxTimeInterval.milliseconds(1000), scheduler: MainScheduler.asyncInstance)
         let isEndAudio = self.$isEndAudioObser
@@ -120,6 +127,7 @@ extension MusicStreamIpl {
             
         }.disposed(by: disposeBag)
         
+
         //        let end = NotificationCenter.rx.
         
         //                NotificationCenter.default.rx.notification(NSNotification.Name.AVPlayerItemDidPlayToEndTime).bind { (isNo) in
@@ -234,7 +242,30 @@ extension MusicStreamIpl {
         self.itemCurrent = item
         self.currentIndex = idx
         self.mCurrentIndex = idx
-        self.playSound(text: text)
+//        self.playSound(text: text)
+        guard let check = item.url, let url = URL(string: check) else {
+            return
+        }
+        self.play(url: url)
+    }
+    
+    private func getUrl(item: MusicModel, onCompletion: @escaping (_ requestURL: String) -> Void)  {
+        guard  let text = item.url, let url = URL(string: text) else {
+            return
+        }
+        
+        let destination: DownloadRequest.DownloadFileDestination = { _, _ in
+            var documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            documentsURL.appendPathComponent("file.csv")
+            return (documentsURL, [.removePreviousFile])
+        }
+        
+        Alamofire.download(url, to: destination).responseData { response in
+            guard let url = response.destinationURL else {
+                return
+            }
+            onCompletion(url.absoluteString)
+        }
     }
     
     private func playSound(text: String) {
@@ -286,14 +317,18 @@ extension MusicStreamIpl {
                 itemRealm.title = item?.title ?? ""
                 itemRealm.url = item?.url ?? ""
                 
+                let a = MyObject()
+                a.name.append(itemRealm)
+                objectsRealmList.append(a)
+                
                 try! realm.write {
-                    realm.create(MyObject.self, value: itemRealm, update: .all)
+                    realm.add(objectsRealmList)
                 }
             }
         }
         
     }
-    private func play(url:URL) {
+    func play(url:URL) {
         do {
             self.audio = try AVAudioPlayer(contentsOf: url)
             audio?.prepareToPlay()
