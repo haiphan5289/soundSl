@@ -19,7 +19,6 @@ class ListMusic: UIViewController {
 
     private let tableView: UITableView = UITableView(frame: .zero, style: .grouped)
     private var dataSource: [MusicModel] = []
-    private var musicStream: MusicStreamIpl = MusicStreamIpl.init()
     private var tap: UITapGestureRecognizer = UITapGestureRecognizer()
     private var viewBG: UIView = UIView(frame: .zero)
     private let disposeBag = DisposeBag()
@@ -57,20 +56,18 @@ extension ListMusic {
         
     }
     private func setupRX() {
-        musicStream.dataSource.asObserver().bind(onNext: weakify({ (listData, wSelf) in
-            wSelf.dataSource = listData
-            wSelf.tableView.reloadData()
-            })).disposed(by: disposeBag)
+//        MusicStreamIpl.share.listsc.asObservable().bind(onNext: weakify({ (listData, wSelf) in
+//            wSelf.dataSource = listData
+//            wSelf.tableView.reloadData()
+//            })).disposed(by: disposeBag)
         
-        Observable.just(self.dataSource)
-             .bind(to: tableView.rx.items(cellIdentifier: ListMusicCell.identifier, cellType: ListMusicCell.self)) {[weak self] (row, element, cell) in
-                 guard let wSelf = self else { return }
+        MusicStreamIpl.share.listsc
+             .bind(to: tableView.rx.items(cellIdentifier: ListMusicCell.identifier, cellType: ListMusicCell.self)) { (row, element, cell) in
                 cell.textLabel?.text = element.title
          }.disposed(by: disposeBag)
          
          tableView.rx.itemSelected.bind(onNext: weakify({ (idx, wSelf) in
             wSelf.dismiss(animated: true) {
-                let item = wSelf.dataSource[idx.row]
                 wSelf.delegate?.selectIndex(index: idx)
             }
          })).disposed(by: disposeBag)

@@ -10,9 +10,9 @@ import Alamofire
 import UIKit
 
 struct MusicModel: Codable {
-    let img: String?
-    let title: String?
-    let resource: String?
+    var img: String?
+    var title: String?
+    var resource: String?
     var url: String?
     
     enum CodingKeys: String, CodingKey {

@@ -31,34 +31,6 @@ class MusicVC: UIViewController {
         visualize()
         setupRX()
         MusicStreamIpl.share.setupRX()
-        //        let ryan = Student(score: BehaviorSubject(value: 80))
-        //        let charlotte = Student(score: BehaviorSubject(value: 90))
-        
-        //        // 3
-        //        let student = PublishSubject<Student>()
-        //
-        //        // 4
-        //        student.asObserver()
-        //               .flatMap {
-        //                     $0.score
-        //                }
-        //                // 5
-        //                .subscribe(onNext: {
-        //                     print($0)
-        //                 })
-        //                .dispose()
-        //
-        //        // 6
-        //        student.map { (stu) -> Observable<Int> in
-        //            return stu.score
-        //        }.bind { (value) in
-        //            print(value)
-        //        }.disposed(by: disposeBag)
-        //
-        //        student.onNext(ryan)
-        //        ryan.score.onNext(85)
-        //        student.onNext(charlotte)
-        //        charlotte.score.onNext(95)
     }
     override func viewWillAppear(_ animated: Bool) {
         MusicStreamIpl.share.maxValueAudio.bind(onNext: weakify({ (value, wSelf) in
@@ -158,9 +130,10 @@ extension MusicVC {
             make.width.height.equalTo(54)
             make.centerY.equalToSuperview()
         }
+        
     }
     private func setupRX() {
-        MusicStreamIpl.share.dataSource.asObserver()
+        MusicStreamIpl.share.listsc
             .bind(to: collectionView.rx.items(cellIdentifier: MusicCell.identifier, cellType: MusicCell.self)) { (row, element, cell) in
                 cell.updateUI(model: element)
         }.disposed(by: disposeBag)
@@ -203,7 +176,7 @@ extension MusicVC {
         
         let item = MusicStreamIpl.share.item
         let idx = MusicStreamIpl.share.currentIndexItem
-        let d = MusicStreamIpl.share.dataSource.asObserver()
+        let d = MusicStreamIpl.share.listsc
         let isPlayAudio = MusicStreamIpl.share.isPlaying
         
         Observable.combineLatest(item, idx, d, isPlayAudio).bind { [weak self] (item, idx, datas, isPlay) in
@@ -216,7 +189,7 @@ extension MusicVC {
             wSelf.currentIndexItem = idx
             wSelf.isPlayAudio = isPlay
             
-            guard idx.row == datas.count - 1 else {
+            guard idx?.row == datas.count - 1 else {
                 wSelf.btNextItem.isEnabled = true
                 return
             }

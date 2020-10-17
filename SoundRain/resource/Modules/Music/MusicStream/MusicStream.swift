@@ -16,21 +16,25 @@ import Firebase
 import Alamofire
 
 protocol MusicStream {
-    var dataSource: BehaviorSubject<[MusicModel]> { get }
+    var listsc: Observable<[MusicModel]> { get }
     var item: Observable<MusicModel> { get }
-    var currentIndexItem: Observable<IndexPath> { get }
+    var currentIndexItem: Observable<IndexPath?> { get }
     var isPlaying: Observable<Bool> { get }
     var isEndAudio: Observable<Bool> { get }
     var currentTime: Observable<TimeInterval> { get }
     var maxValueAudio: Observable<Double> { get }
 }
 final class MusicStreamIpl: MusicStream {
+    var listsc: Observable<[MusicModel]> {
+        return self.$listSource.asObservable()
+    }
+    
     public static var share = MusicStreamIpl()
     var item: Observable<MusicModel> {
         return self.$itemOb
     }
-    var currentIndexItem: Observable<IndexPath> {
-        return self.$currentIndex
+    var currentIndexItem: Observable<IndexPath?> {
+        return self.$currentIndex.asObservable()
     }
     
     var isPlaying: Observable<Bool> {
@@ -47,43 +51,60 @@ final class MusicStreamIpl: MusicStream {
     }
     @Replay(queue: MainScheduler.asyncInstance) private var itemOb: MusicModel
     private var itemCurrent: MusicModel?
-    @Replay(queue: MainScheduler.asyncInstance) private var currentIndex: IndexPath
+    @VariableReplay var currentIndex: IndexPath?
     @Replay(queue: MainScheduler.asyncInstance) private var isPlay: Bool
     @Replay(queue: MainScheduler.asyncInstance) var isEndAudioObser: Bool
     @Replay(queue: MainScheduler.asyncInstance) private var mCurrentTime: TimeInterval
     @Replay(queue: MainScheduler.asyncInstance) private var maxValueSlider: Double
-    @ReplayA(bufferSize: 1, queue: MainScheduler.asyncInstance) private var isANH: Bool
+    @Replay(queue: MainScheduler.asyncInstance) private var itemCovert: MusicModel
+    let timer = Observable<Int>.interval(RxTimeInterval.milliseconds(1000), scheduler: MainScheduler.asyncInstance)
+    @VariableReplay var timeMusicToOff: CGFloat = 0
+    @VariableReplay private var listSource: [MusicModel] = []
+    @VariableReplay var indexTimeSelect: Int = -1
     private var mCurrentIndex: IndexPath?
-    private var aaa: BehaviorRelay<MusicModel?> = BehaviorRelay(value: nil)
     var dataSource: BehaviorSubject<[MusicModel]> = BehaviorSubject.init(value: [])
-    private var mSource: [MusicModel] = []
-    var miniValue: TimeInterval = 0
-    var maxValue: TimeInterval = 0
-    //    private var miniValueObs: PublishSubject<TimeInterval> = PublishSubject.init()
-    //    private var maxValueObs: PublishSubject<TimeInterval> = PublishSubject.init()
-    var itemCheck = ReplaySubject<String?>.create(bufferSize: 1)
-//    var maxValueSlider: PublishSubject<Double> = PublishSubject.init()
-    var listMusiceFavourite: BehaviorRelay<[MusicModel]> = BehaviorRelay.init(value: [])
-    var listLoved: [MusicModel] = []
-    var names: Results<MyObject>?
-    let realm = try! Realm()
+    private var listMusiceFavourite: BehaviorRelay<[MusicModel]> = BehaviorRelay.init(value: [])
+    private var listLoved: [MusicModel] = []
     var audio: AVAudioPlayer?
-    let data = ExampleData2()
-    private let objectsRealmList = List<MyObject>()
     private let disposeBag = DisposeBag()
 }
+
 extension MusicStreamIpl {
     private func dummyData() {
+        let realm = try! Realm()
+        let listCount = realm.objects(MyObject.self)
+        guard listCount.count <= 0 else {
+            self.getMusicRealm(objects: listCount)
+            return
+        }
+        self.getMusicFirebase()
+    }
+    private func getMusicRealm(objects: Results<MyObject>) {
+        objects.first?.list.forEach({ (item) in
+            do {
+                let data = try JSONSerialization.data(withJSONObject: item.toDictionary(), options: .prettyPrinted)
+                let model = try JSONDecoder().decode(MusicModel.self, from: data)
+                self.listSource.append(model)
+            } catch let err {
+                print(err.localizedDescription)
+            }
+        })
+        
+    }
+    private func getMusicFirebase() {
         var data: [MusicModel] = []
         let dataBase = Database.database().reference()
         dataBase.child("\(FirebaseTable.sound.table)").observe(.childAdded) { (snapShot) in
             if let user = self.convertDataSnapshotToCodable(data: snapShot, type: MusicModel.self) {
-                var item = user
-                self.getUrl(item: item) { (txtUrl) in
-                    item.url = txtUrl
-                    data.append(item)
-                    self.dataSource.onNext(data)
-                }
+//                var item = user
+//                self.getUrl(item: item) { (txtUrl) in
+//                    item.url = txtUrl
+//                    data.append(item)
+//                    self.dataSource.onNext(data)
+//                }
+                self.itemCovert = user
+                data.append(user)
+                self.dataSource.onNext(data)
             }
         }
     }
@@ -92,25 +113,13 @@ extension MusicStreamIpl {
         
         self.listMusiceFavourite.asObservable().bind { (value) in
             self.listLoved = value
-//            self.writeRealm(list: value)
-//            self.arrayToList()
-//            self.loadPeople()
         }.disposed(by: disposeBag)
         
-        self.dataSource.asObserver()
-            .filter { $0.count > 0 }
-            .debounce(.seconds(3), scheduler: ConcurrentDispatchQueueScheduler.init(qos: .background))
-            .bind { [weak self] (list) in
-                guard let wSelf = self else {
-                    return
-                }
-                wSelf.mSource = list
-            }.disposed(by: disposeBag)
-        
-        let timer = Observable<Int>.interval(RxTimeInterval.milliseconds(1000), scheduler: MainScheduler.asyncInstance)
         let isEndAudio = self.$isEndAudioObser
-        
-        Observable.combineLatest(timer, isEndAudio).bind { [weak self] (time, isEnd) in
+        let typeTime = self.$indexTimeSelect
+        let timeOff = self.$timeMusicToOff
+            
+        Observable.combineLatest(timer, isEndAudio, typeTime, timeOff).bind { [weak self] (current, isEnd, time, timeOff) in
             guard !isEnd else {
                 return
             }
@@ -125,9 +134,110 @@ extension MusicStreamIpl {
             
             wSelf.mCurrentTime = current
             
+            guard time != -1 else {
+                return
+            }
+            
+            guard time != 0 else {
+                return
+            }
+            
+            guard CGFloat(current) < timeOff else {
+                wSelf.audio?.pause()
+                return
+            }
+            
         }.disposed(by: disposeBag)
         
-
+        let item = self.$itemCovert.flatMap { (item) -> Observable<MusicModel> in
+            return Observable.create { (observe) -> Disposable in
+                guard  let text = item.url, let url = URL(string: text) else {
+                    return Disposables.create()
+                }
+                
+                var t = item
+                
+                let destination: DownloadRequest.DownloadFileDestination = { _, _ in
+                    var documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+                    documentsURL.appendPathComponent("file.csv")
+                    return (documentsURL, [.removePreviousFile])
+                }
+                
+                Alamofire.download(url, to: destination).responseData { response in
+                    guard let url = response.destinationURL else {
+                        return
+                    }
+                    t.url = url.absoluteString
+                    observe.onNext(t)
+                }
+                return Disposables.create()
+            }
+        }
+        
+        Observable.combineLatest(item, self.dataSource).map { (item, list) -> [MusicModel] in
+            var l = list
+            for (index, i) in list.enumerated() where i.img == item.img {
+                l[index] = item
+            }
+            return l
+        }.bind { (list) in
+            guard self.listSource.count > 0 else {
+                self.listSource = list
+                return
+            }
+            var t = self.listSource
+            
+            for (index1, item) in list.enumerated() {
+                for (index, item2) in self.listSource.enumerated() {
+                    if let isContent = item.url?.contains("file.csv"), isContent, item.url != item2.url && index == index1 {
+                        t[index] = item
+                    }
+                }
+            }
+            self.listSource = t
+            
+        }.disposed(by: disposeBag)
+        
+        self.$listSource
+            .filter { $0.count > 0 }
+            .debounce(.milliseconds(100), scheduler: ConcurrentDispatchQueueScheduler.init(qos: .background))
+            .asObservable().bind { (list) in
+                let realm = try! Realm()
+                let l = MyObject()
+                list.forEach { (item) in
+                    let t = LisResourceItem()
+                    t.img = item.img ?? ""
+                    t.resource = item.resource ?? ""
+                    t.title = item.title ?? ""
+                    t.url = item.url ?? ""
+                    l.list.append(t)
+                }
+                do {
+                    try realm.write {
+                        realm.add(l, update: .all)
+                    }
+                } catch let err {
+                    print(err.localizedDescription)
+                }
+        }.disposed(by: disposeBag)
+        
+        self.$currentIndex.asObservable()
+            .distinctUntilChanged()
+            .bind { [weak self] (idx) in
+                guard let wSelf = self, let idx = idx else {
+                    return
+                }
+                let item = wSelf.listSource[idx.row]
+                wSelf.itemOb = item
+                wSelf.itemCurrent = item
+                wSelf.mCurrentIndex = idx
+                guard let check = item.url, let url = URL(string: check) else {
+                    return
+                }
+                wSelf.play(url: url)
+                
+            }
+        .disposed(by: disposeBag)
         //        let end = NotificationCenter.rx.
         
         //                NotificationCenter.default.rx.notification(NSNotification.Name.AVPlayerItemDidPlayToEndTime).bind { (isNo) in
@@ -156,93 +266,16 @@ extension MusicStreamIpl {
         }
         self.listMusiceFavourite.accept(list)
     }
-    private func writeRealm(list: [MusicModel]) {
-        guard list.count > 0 else {
-            return
-        }
-        //        data.listItem = list
-        //        data.name = [1,2]
-        //        do {
-        //            try realm.write {
-        //                realm.add(data)
-        //            }
-        //        } catch {
-        //            print("Error add data")
-        ////        }
-        //        let newName = ExampleData()
-        //        newName.name = "Hải"
-        //        do {
-        //            try realm.write {
-        //                realm.add(newName)
-        //            }
-        //        } catch {
-        //            print("Error add data")
-        //        }
-    }
-    //    private func addName(text: String) {
-    ////        let newName = ExampleData()
-    ////        newName.name.append(1)
-    //        let check = List<MyObject>()
-    //        let a: MyObject = MyObject()
-    //        check.append(a)
-    //
-    //        do {
-    //            try realm.write {
-    //                realm.add(a)
-    //            }
-    //        } catch {
-    //            print("Error add data")
-    //        }
-    //    }
-    func arrayToList() {
-        let b = LisResourceItem()
-//        dynamic var img = ""
-//        dynamic var title = ""
-//        dynamic var resource = ""
-//        dynamic var url = ""
-        b.img = "hải"
-        b.title = "phan"
-        b.resource = "hải"
-        b.url = "phan"
-        let c = MyObject()
-        c.name.append(b)
-        let objectsArray = [MyObject(), MyObject(), MyObject(), MyObject(), MyObject(), c]
-        //        let a: MyObject = MyObject()
-        //        a.name = 1
-        //        let objectsArray = [a, a]
-        
-        
-        // this one is illegal
-        //objectsRealmList = objectsArray
-        
-        for object in objectsArray {
-            objectsRealmList.append(object)
-        }
-        
-        // storing the data...
-        let realm = try! Realm()
-        try! realm.write {
-            realm.add(objectsRealmList)
-        }
-    }
-    private func loadPeople () {
-        names = realm.objects(MyObject.self)
-        names?.forEach({ (item) in
-            print(item.name)
-        })
-    }
     func getIndex(idx: IndexPath) {
-        self.itemCheck.onNext("sssss")
         
-        guard let text = self.mSource[idx.row].url, self.mCurrentIndex != idx else {
+        guard self.currentIndex != idx else {
             return
         }
-        let item = self.mSource[idx.row]
+        let item = self.listSource[idx.row]
         self.itemOb = item
         self.itemCurrent = item
         self.currentIndex = idx
         self.mCurrentIndex = idx
-//        self.playSound(text: text)
         guard let check = item.url, let url = URL(string: check) else {
             return
         }
@@ -266,67 +299,6 @@ extension MusicStreamIpl {
             }
             onCompletion(url.absoluteString)
         }
-    }
-    
-    private func playSound(text: String) {
-        guard  let url = URL(string: text), self.names == nil else {
-            return
-        }
-        
-        downloadFileFromURL(url: url)
-        
-        //            do {
-        //                try AVAudioSession.sharedInstance().setCategory(.playAndRecord, mode: .default)
-        //                try AVAudioSession.sharedInstance().setActive(true)
-        //
-        ////                 The following line is required for the player to work on iOS 11. Change the file type accordingly
-        ////                audio = try AVAudioPlayer(contentsOf: url, fileTypeHint: AVFileType.mp3.rawValue)
-        //                /* iOS 10 and earlier require the following line:
-        //                player = try AVAudioPlayer(contentsOf: url, fileTypeHint: AVFileTypeMPEGLayer3) */
-        //
-        //                guard let player = audio else { return }
-        //
-        //                player.pause()
-        ////                slideMusic.minimumValue = 0
-        ////                slideMusic.maximumValue = Float(player.duration)
-        //                        let m = Int(player.duration / 60)
-        //                        let s = Int(player.duration) % 60
-        //                        lbEnd.text = "\(m):\(s)"
-        //                player.play()
-        ////                timer = Observable<Int>.interval(RxTimeInterval.milliseconds(1000), scheduler: MainScheduler.asyncInstance)
-        //            } catch let error {
-        //                print(error.localizedDescription)
-        //            }
-    }
-    private func downloadFileFromURL(url:URL){
-        
-        let destination: DownloadRequest.DownloadFileDestination = { _, _ in
-            var documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-            documentsURL.appendPathComponent("file.csv")
-            return (documentsURL, [.removePreviousFile])
-        }
-        
-        Alamofire.download(url, to: destination).responseData { [self] response in
-            if let destinationUrl = response.destinationURL {
-                self.play(url: destinationUrl.absoluteURL)
-                
-                let item = self.itemCurrent
-                let itemRealm = LisResourceItem()
-                itemRealm.img = item?.img ?? ""
-                itemRealm.resource = item?.resource ?? ""
-                itemRealm.title = item?.title ?? ""
-                itemRealm.url = item?.url ?? ""
-                
-                let a = MyObject()
-                a.name.append(itemRealm)
-                objectsRealmList.append(a)
-                
-                try! realm.write {
-                    realm.add(objectsRealmList)
-                }
-            }
-        }
-        
     }
     func play(url:URL) {
         do {
@@ -368,69 +340,5 @@ extension MusicStreamIpl {
         return nil
     }
 }
-
-protocol checkaaa {
-    var item: Observable<Int> { get }
-}
-
-class checkOb {
-    public static var share = checkOb()
-    var it: ReplaySubject<[Int]> = ReplaySubject.create(bufferSize: 1)
-}
-extension checkOb {
-    func setup() {
-        self.it.onNext([1,2])
-    }
-}
-
-@propertyWrapper
-struct ReplayA<T> {
-    private let _event: ReplaySubject<T>
-    private let queue: ImmediateSchedulerType
-    init(bufferSize: Int, queue: ImmediateSchedulerType) {
-        self.queue = queue
-        _event = ReplaySubject<T>.create(bufferSize: bufferSize)
-    }
-    var wrappedValue: T {
-        get {
-            fatalError("Do not get value from this!!!!")
-        }
-
-        set {
-            _event.onNext(newValue)
-        }
-    }
-    
-    var projectedValue: Observable<T> {
-        return _event.observeOn(queue)
-    }
-}
-//struct Replaya<T> {
-//    private let _event: ReplaySubject<T>
-//    private let queue: ImmediateSchedulerType
-//    init(bufferSize: Int, queue: ImmediateSchedulerType) {
-//        self.queue = queue
-//        _event = ReplaySubject<T>.create(bufferSize: bufferSize)
-//    }
-//
-//    init(queue: ImmediateSchedulerType) {
-//        self.queue = queue
-//       _event = ReplaySubject<T>.create(bufferSize: 1)
-//    }
-//
-//    var wrappedValue: T {
-//        get {
-//            fatalError("Do not get value from this!!!!")
-//        }
-//
-//        set {
-//            _event.onNext(newValue)
-//        }
-//    }
-//
-//    var projectedValue: Observable<T> {
-//        return _event.observeOn(queue)
-//    }
-//}
 
 
