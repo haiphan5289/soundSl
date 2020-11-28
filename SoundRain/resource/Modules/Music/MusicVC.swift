@@ -99,7 +99,7 @@ extension MusicVC {
         }
 
 
-        lbNameMusic.text = "Hải"
+        lbNameMusic.text = "Chưa có nhạc"
         self.vPlayCurrent.addSubview(lbNameMusic)
         lbNameMusic.snp.makeConstraints { (make) in
             make.top.equalTo(img)
@@ -114,20 +114,21 @@ extension MusicVC {
             make.left.equalTo(img.snp.right).inset(-16)
         }
 
-
-        btNextItem.setImage(UIImage(named: "ic_next"), for: .normal)
+        btNextItem.setTitle("Kế tiếp", for: .normal)
+        self.btNextItem.titleLabel?.font = UIFont.systemFont(ofSize: 11)
         self.vPlayCurrent.addSubview(btNextItem)
         btNextItem.snp.makeConstraints { (make) in
             make.right.equalToSuperview().inset(16)
-            make.width.height.equalTo(54)
+            make.height.equalTo(54)
             make.centerY.equalToSuperview()
         }
 
-        btPlayItem.setImage(UIImage(named: "ic_next"), for: .normal)
+        self.btPlayItem.setTitle("Tạm dừng", for: .normal)
+        self.btPlayItem.titleLabel?.font = UIFont.systemFont(ofSize: 11)
         self.vPlayCurrent.addSubview(btPlayItem)
         btPlayItem.snp.makeConstraints { (make) in
             make.right.equalTo(self.btNextItem.snp.left).inset(-16)
-            make.width.height.equalTo(54)
+            make.height.equalTo(54)
             make.centerY.equalToSuperview()
         }
         
@@ -157,20 +158,20 @@ extension MusicVC {
             return self.isPlayAudio
         }.bind(onNext: weakify({ (isPlay, wSelf) in
             guard isPlay else {
-                wSelf.btPlayItem.setImage(UIImage(named: "ic_resume"), for: .normal)
+                wSelf.btPlayItem.setTitle("Tạm dừng", for: .normal)
                 MusicStreamIpl.share.playingAudio()
                 return
             }
-            wSelf.btPlayItem.setImage(UIImage(named: "ic_play"), for: .normal)
+            wSelf.btPlayItem.setTitle("Đang nghe", for: .normal)
             MusicStreamIpl.share.stopAudio()
         })).disposed(by: disposeBag)
         
         MusicStreamIpl.share.isPlaying.bind(onNext: weakify({ (isPlay, wSelf) in
             guard isPlay else {
-                wSelf.btPlayItem.setImage(UIImage(named: "ic_resume"), for: .normal)
+                wSelf.btPlayItem.setTitle("Tạm dừng", for: .normal)
                 return
             }
-            wSelf.btPlayItem.setImage(UIImage(named: "ic_play"), for: .normal)
+            wSelf.btPlayItem.setTitle("Đang nghe", for: .normal)
             
         })).disposed(by: disposeBag)
         

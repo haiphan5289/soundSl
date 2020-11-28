@@ -159,7 +159,7 @@ extension MusicStreamIpl {
                 
                 let destination: DownloadRequest.DownloadFileDestination = { _, _ in
                     var documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-                    documentsURL.appendPathComponent("file.csv")
+                    documentsURL.appendPathComponent("\(item.title ?? "")file.csv")
                     return (documentsURL, [.removePreviousFile])
                 }
                 
@@ -174,28 +174,8 @@ extension MusicStreamIpl {
             }
         }
         
-        Observable.combineLatest(item, self.dataSource).map { (item, list) -> [MusicModel] in
-            var l = list
-            for (index, i) in list.enumerated() where i.img == item.img {
-                l[index] = item
-            }
-            return l
-        }.bind { (list) in
-            guard self.listSource.count > 0 else {
-                self.listSource = list
-                return
-            }
-            var t = self.listSource
-            
-            for (index1, item) in list.enumerated() {
-                for (index, item2) in self.listSource.enumerated() {
-                    if let isContent = item.url?.contains("file.csv"), isContent, item.url != item2.url && index == index1 {
-                        t[index] = item
-                    }
-                }
-            }
-            self.listSource = t
-            
+        Observable.combineLatest(item, self.dataSource).bind { (item, list) in
+            self.listSource.append(item)
         }.disposed(by: disposeBag)
         
         self.$listSource
@@ -301,20 +281,36 @@ extension MusicStreamIpl {
         }
     }
     func play(url:URL) {
+//        do {
+//            self.audio = try AVAudioPlayer(contentsOf: url)
+//            audio?.prepareToPlay()
+//            audio?.play()
+//            self.isPlay = true
+//            guard let max = audio?.duration else {
+//                return
+//            }
+//            self.maxValueSlider = max
+//        } catch let error as NSError {
+//            print(error.localizedDescription)
+//        } catch {
+//            print("AVAudioPlayer init failed")
+//        }
         do {
-            self.audio = try AVAudioPlayer(contentsOf: url)
-            audio?.prepareToPlay()
-            audio?.play()
+            let songData = try NSData(contentsOf: url, options: NSData.ReadingOptions.mappedIfSafe)
+            try AVAudioSession.sharedInstance().setCategory(AVAudioSession.Category.playback)
+            try AVAudioSession.sharedInstance().setActive(true)
+            audio = try AVAudioPlayer(data: songData as Data, fileTypeHint: AVFileType.mp3.rawValue)
+            audio!.prepareToPlay()
+            audio!.play()
             self.isPlay = true
             guard let max = audio?.duration else {
                 return
             }
             self.maxValueSlider = max
-        } catch let error as NSError {
-            print(error.localizedDescription)
         } catch {
             print("AVAudioPlayer init failed")
         }
+
         
     }
     

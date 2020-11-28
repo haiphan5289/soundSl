@@ -68,7 +68,7 @@ extension PostProductVC {
         do {
             // Create a reference to the file you want to upload
             let storageRef = Storage.storage().reference()
-            let riversRef = storageRef.child("music/rain.mp3")
+            let riversRef = storageRef.child("music/\(Date().timeIntervalSince1970)soundRain.mp3")
             
             // Upload the file to the path "images/rivers.jpg"
            riversRef.putData(data, metadata: nil) { (metadata, error) in
@@ -96,35 +96,35 @@ extension PostProductVC {
         self.uploadToFirebase(urlMp3: urlMp3, data: data)
     }
     private func uploadToFirebase(urlMp3: String, data: Data) {
-        do {
-            // Create a reference to the file you want to upload
-            let storageRef = Storage.storage().reference()
-            let riversRef = storageRef.child("imgMusic/rain")
-            
-            // Upload the file to the path "images/rivers.jpg"
-            let uploadTask = riversRef.putData(data, metadata: nil) { (metadata, error) in
-                guard let metadata = metadata else {
-                    // Uh-oh, an error occurred!
-                    return
-                }
-                // Metadata contains file metadata such as size, content-type.
-                let size = metadata.size
-                // You can also access to download URL after upload.
-                riversRef.downloadURL { (url, error) in
-                    guard let downloadURL = url else {
-                        // Uh-oh, an error occurred!
-                        return
-                    }
-                    let dataDic: [String: Any] = ["title": "Tiếng mưa rơi",
-                                                  "img":downloadURL.absoluteString,
-                                                  "url": urlMp3,
-                    ]
-                    FirebaseDatabase.instance.ref.child("\(FirebaseTable.sound.table)").childByAutoId().setValue(dataDic)
-                }
-            }
-        } catch let err {
-            print(err.localizedDescription)
-        }
+//        do {
+//            // Create a reference to the file you want to upload
+//            let storageRef = Storage.storage().reference()
+//            let riversRef = storageRef.child("imgMusic/\(Date().timeIntervalSince1970)piano")
+//
+//            // Upload the file to the path "images/rivers.jpg"
+//            let uploadTask = riversRef.putData(data, metadata: nil) { (metadata, error) in
+//                guard let metadata = metadata else {
+//                    // Uh-oh, an error occurred!
+//                    return
+//                }
+//                // Metadata contains file metadata such as size, content-type.
+//                let size = metadata.size
+//                // You can also access to download URL after upload.
+//                riversRef.downloadURL { (url, error) in
+//                    guard let downloadURL = url else {
+//                        // Uh-oh, an error occurred!
+//                        return
+//                    }
+//                    let dataDic: [String: Any] = ["title": "Tiếng piano",
+//                                                  "img":downloadURL.absoluteString,
+//                                                  "url": urlMp3,
+//                    ]
+//                    FirebaseDatabase.instance.ref.child("\(FirebaseTable.sound.table)").childByAutoId().setValue(dataDic)
+//                }
+//            }
+//        } catch let err {
+//            print(err.localizedDescription)
+//        }
     }
     private func urlMp3Obserable() -> Observable<String> {
         return Observable.create { (obser) -> Disposable in
@@ -135,7 +135,7 @@ extension PostProductVC {
                 do {
                     // Create a reference to the file you want to upload
                     let storageRef = Storage.storage().reference()
-                    let riversRef = storageRef.child("music/rain22244.mp3")
+                    let riversRef = storageRef.child("music/\(Date().timeIntervalSince1970)soundRain.mp3")
                     
                     // Upload the file to the path "images/rivers.jpg"
                    riversRef.putData(data, metadata: nil) { (metadata, error) in
@@ -170,7 +170,7 @@ extension PostProductVC {
                 do {
                           // Create a reference to the file you want to upload
                           let storageRef = Storage.storage().reference()
-                          let riversRef = storageRef.child("imgMusic/rain5555.jpg")
+                          let riversRef = storageRef.child("imgMusic/\(Date().timeIntervalSince1970)img_rain_night.jpg")
                           
                           // Upload the file to the path "images/rivers.jpg"
                           riversRef.putData(data, metadata: nil) { (metadata, error) in

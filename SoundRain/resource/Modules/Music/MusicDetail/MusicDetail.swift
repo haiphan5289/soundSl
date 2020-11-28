@@ -60,17 +60,14 @@ final class MusicDetail: UIViewController {
         title = "Tiêng mưa"
         
         let buttonLeft = UIButton(frame: CGRect(origin: .zero, size: CGSize(width: 44, height: 44)))
-        buttonLeft.setImage(UIImage(named: "ic_arrow_back"), for: .normal)
-        buttonLeft.backgroundColor = .red
+        buttonLeft.setTitle("Hẹn giờ", for: .normal)
+        buttonLeft.setTitleColor(.white, for: .normal)
         buttonLeft.contentEdgeInsets = UIEdgeInsets(top: 0, left: -16, bottom: 0, right: 0)
         let leftBarButton = UIBarButtonItem(customView: buttonLeft)
         navigationItem.rightBarButtonItem = leftBarButton
         
         buttonLeft.rx.tap.bind { _ in
             let vc = TimeOClock(nibName: "TimeOClock", bundle: nil)
-//            vc.modalPresentationStyle = .overCurrentContext
-//            vc.modalTransitionStyle = .crossDissolve
-//            let vc = ListMusic()
             vc.modalPresentationStyle = .overCurrentContext
             vc.modalTransitionStyle = .crossDissolve
             self.present(vc, animated: true, completion: nil)
@@ -167,20 +164,20 @@ extension MusicDetail {
         MusicStreamIpl.share.isPlaying.bind(onNext: weakify({ (isPlay, wSelf) in
             wSelf.isPlayAudio = isPlay
             guard isPlay else {
-                wSelf.btPause.setImage(UIImage(named: "ic_resume"), for: .normal)
+                wSelf.btPause.setTitle("Đang dừng", for: .normal)
                 return
             }
-            wSelf.btPause.setImage(UIImage(named: "ic_play"), for: .normal)
+            wSelf.btPause.setTitle("Đang nghe", for: .normal)
         })).disposed(by: disposeBag)
         
         btPause.rx.tap.map { return self.isPlayAudio
         }.bind(onNext: weakify({ (isPlay, wSelf) in
             guard isPlay else {
-                wSelf.btPause.setImage(UIImage(named: "ic_resume"), for: .normal)
+                wSelf.btPause.setTitle("Đang dừng", for: .normal)
                 MusicStreamIpl.share.playingAudio()
                 return
             }
-            wSelf.btPause.setImage(UIImage(named: "ic_play"), for: .normal)
+            wSelf.btPause.setTitle("Đang nghe", for: .normal)
             MusicStreamIpl.share.stopAudio()
         })).disposed(by: disposeBag)
         
@@ -188,9 +185,9 @@ extension MusicDetail {
             if wSelf.btPause.isSelected {
                 wSelf.btPause.isSelected = false
                 MusicStreamIpl.share.playingAudio()
-                wSelf.btPause.setImage(UIImage(named: "ic_resume"), for: .normal)
+                wSelf.btPause.setTitle("Đang dừng", for: .normal)
             } else {
-                wSelf.btPause.setImage(UIImage(named: "ic_play"), for: .normal)
+                wSelf.btPause.setTitle("Đang nghe", for: .normal)
                 wSelf.btPause.isSelected = true
                 MusicStreamIpl.share.stopAudio()
             }
@@ -200,11 +197,11 @@ extension MusicDetail {
             if wSelf.btReplay.isSelected {
                 wSelf.btReplay.isSelected = false
                 wSelf.isReplay = false
-                wSelf.btReplay.setImage(UIImage(named: "ic_replay"), for: .normal)
+                wSelf.btReplay.setTitle("Lặp lại", for: .normal)
             } else {
                 wSelf.btReplay.isSelected = true
                 wSelf.isReplay = true
-                wSelf.btReplay.setImage(UIImage(named: "ic_replay_selected"), for: .selected)
+                wSelf.btReplay.setTitle("Không lặp lại", for: .normal)
             }
         }).disposed(by: disposeBag)
         
@@ -251,7 +248,7 @@ extension MusicDetail {
         })).disposed(by: disposeBag)
         
         MusicStreamIpl.share.item.bind { (item) in
-            print(item)
+            self.title = item.title
         }.disposed(by: disposeBag)
         
     }
