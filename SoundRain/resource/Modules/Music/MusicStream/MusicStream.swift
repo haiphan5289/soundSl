@@ -52,6 +52,7 @@ final class MusicStreamIpl: MusicStream {
     @Replay(queue: MainScheduler.asyncInstance) private var itemOb: MusicModel
     private var itemCurrent: MusicModel?
     @VariableReplay var currentIndex: IndexPath?
+    var isReplay: PublishSubject<Bool> = PublishSubject.init()
     @Replay(queue: MainScheduler.asyncInstance) private var isPlay: Bool
     @Replay(queue: MainScheduler.asyncInstance) var isEndAudioObser: Bool
     @Replay(queue: MainScheduler.asyncInstance) private var mCurrentTime: TimeInterval
@@ -147,6 +148,17 @@ extension MusicStreamIpl {
                 return
             }
             
+        }.disposed(by: disposeBag)
+        
+        Observable.combineLatest(self.isReplay.asObservable(), self.$isEndAudioObser).bind { [weak self] (isReplay, isEnd) in
+            guard let wSelf = self else {
+                return
+            }
+            guard isReplay else {
+                return
+            }
+            wSelf.isEndAudioObser = false
+            MusicStreamIpl.share.audio?.play()
         }.disposed(by: disposeBag)
         
         let item = self.$itemCovert.flatMap { (item) -> Observable<MusicModel> in

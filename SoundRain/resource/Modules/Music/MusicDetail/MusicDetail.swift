@@ -128,17 +128,17 @@ extension MusicDetail {
             wSelf.lbStart.text = String(format: "%d:%d", m, s)
         })).disposed(by: disposeBag)
         
-        isEndAudio.asObserver().bind(onNext: weakify({ (isEnd, wSelf) in
-            guard isEnd else {
-                return
-            }
-            
-            guard wSelf.isReplay else {
-                MusicStreamIpl.share.audio?.pause()
-                return
-            }
-            MusicStreamIpl.share.audio?.play()
-        })).disposed(by: disposeBag)
+//        isEndAudio.asObserver().bind(onNext: weakify({ (isEnd, wSelf) in
+//            guard isEnd else {
+//                return
+//            }
+//            
+//            guard wSelf.isReplay else {
+//                MusicStreamIpl.share.audio?.pause()
+//                return
+//            }
+//            MusicStreamIpl.share.audio?.play()
+//        })).disposed(by: disposeBag)
         
         MusicStreamIpl.share.maxValueAudio.bind { [weak self] (value) in
             guard let wSelf = self else {
@@ -155,6 +155,7 @@ extension MusicDetail {
             guard value > 0 else {
                 return
             }
+            MusicStreamIpl.share.isEndAudioObser = false
             MusicStreamIpl.share.audio?.pause()
             MusicStreamIpl.share.audio?.currentTime = TimeInterval(value)
             MusicStreamIpl.share.audio?.play()
@@ -197,10 +198,12 @@ extension MusicDetail {
             if wSelf.btReplay.isSelected {
                 wSelf.btReplay.isSelected = false
                 wSelf.isReplay = false
+                MusicStreamIpl.share.isReplay.onNext(false)
                 wSelf.btReplay.setTitle("Lặp lại", for: .normal)
             } else {
                 wSelf.btReplay.isSelected = true
                 wSelf.isReplay = true
+                MusicStreamIpl.share.isReplay.onNext(true)
                 wSelf.btReplay.setTitle("Không lặp lại", for: .normal)
             }
         }).disposed(by: disposeBag)

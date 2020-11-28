@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1B444F2124F2A6C6004F84F8 /* soundRain.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 1B444F2024F2A6C6004F84F8 /* soundRain.mp3 */; };
 		1B444F2624F2A92E004F84F8 /* MusicCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B444F2424F2A92E004F84F8 /* MusicCell.swift */; };
 		1B444F2724F2A92E004F84F8 /* MusicCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1B444F2524F2A92E004F84F8 /* MusicCell.xib */; };
 		1B444F2A24F2AE63004F84F8 /* MusicModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B444F2924F2AE63004F84F8 /* MusicModel.swift */; };
@@ -35,11 +34,11 @@
 		52A818292D7DAC78C0036958 /* Pods_SoundRain.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0BF57AA65E00EC655E881BE2 /* Pods_SoundRain.framework */; };
 		931DEA66251CE3FB00D3B729 /* property.swift in Sources */ = {isa = PBXBuildFile; fileRef = 931DEA65251CE3FB00D3B729 /* property.swift */; };
 		93638C9A25723FB400C004F5 /* piano.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 93638C9925723FB400C004F5 /* piano.mp3 */; };
+		93638C9F2572548300C004F5 /* the_sound_of_running_water.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 93638C9E2572548300C004F5 /* the_sound_of_running_water.mp3 */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		0BF57AA65E00EC655E881BE2 /* Pods_SoundRain.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SoundRain.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		1B444F2024F2A6C6004F84F8 /* soundRain.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = soundRain.mp3; sourceTree = "<group>"; };
 		1B444F2424F2A92E004F84F8 /* MusicCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicCell.swift; sourceTree = "<group>"; };
 		1B444F2524F2A92E004F84F8 /* MusicCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = MusicCell.xib; sourceTree = "<group>"; };
 		1B444F2924F2AE63004F84F8 /* MusicModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicModel.swift; sourceTree = "<group>"; };
@@ -70,6 +69,7 @@
 		55C25584C636C27D1653419D /* Pods-SoundRain.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SoundRain.debug.xcconfig"; path = "Target Support Files/Pods-SoundRain/Pods-SoundRain.debug.xcconfig"; sourceTree = "<group>"; };
 		931DEA65251CE3FB00D3B729 /* property.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = property.swift; sourceTree = "<group>"; };
 		93638C9925723FB400C004F5 /* piano.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = piano.mp3; sourceTree = "<group>"; };
+		93638C9E2572548300C004F5 /* the_sound_of_running_water.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = the_sound_of_running_water.mp3; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -87,8 +87,8 @@
 		1B444F1F24F2A6B1004F84F8 /* Data */ = {
 			isa = PBXGroup;
 			children = (
+				93638C9E2572548300C004F5 /* the_sound_of_running_water.mp3 */,
 				93638C9925723FB400C004F5 /* piano.mp3 */,
-				1B444F2024F2A6C6004F84F8 /* soundRain.mp3 */,
 			);
 			path = Data;
 			sourceTree = "<group>";
@@ -327,7 +327,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1B444F2124F2A6C6004F84F8 /* soundRain.mp3 in Resources */,
 				93638C9A25723FB400C004F5 /* piano.mp3 in Resources */,
 				2E83788B2536FB7100CE5D83 /* TimeOClock.xib in Resources */,
 				1B87FAC024F157C100515716 /* LaunchScreen.storyboard in Resources */,
@@ -336,6 +335,7 @@
 				1B87FAB824F157BD00515716 /* Main.storyboard in Resources */,
 				1B444F2724F2A92E004F84F8 /* MusicCell.xib in Resources */,
 				1B444F2F24F2B13B004F84F8 /* MusicDetail.xib in Resources */,
+				93638C9F2572548300C004F5 /* the_sound_of_running_water.mp3 in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -568,6 +568,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 7VA7N3EEEN;
 				INFOPLIST_FILE = SoundRain/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 13.4;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -587,6 +588,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 7VA7N3EEEN;
 				INFOPLIST_FILE = SoundRain/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 13.4;
 				LD_RUNPATH_SEARCH_PATHS = (
