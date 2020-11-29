@@ -14,11 +14,15 @@ import RxSwift
 class PostProductVC: UIViewController {
     
     private let disposeBag = DisposeBag()
+    private var imgText = "img_vemuahe"
+    private var urlSound = "vemuahe"
+    private var titleData = "Tiếng dế kêu"
     override func viewDidLoad() {
         super.viewDidLoad()
         visualize()
         login()
         setupRX()
+        
     }
     
 }
@@ -40,9 +44,10 @@ extension PostProductVC {
 //            print(value)
 //            })).disposed(by: disposeBag)
         Observable.combineLatest(self.uploadImage(), self.urlMp3Obserable()).bind { (img, url) in
-            let dataDic: [String: Any] = ["title": "Tiếng nước chảy",
+            let dataDic: [String: Any] = ["title": self.titleData,
                                           "img":img,
                                           "url": url,
+                                          "img_Source": self.imgText ,
             ]
             FirebaseDatabase.instance.ref.child("\(FirebaseTable.sound.table)").childByAutoId().setValue(dataDic)
         }.disposed(by: disposeBag)
@@ -56,7 +61,7 @@ extension PostProductVC {
         }
     }
     private func postProduct() {
-        guard let url = Bundle.main.url(forResource: "the_sound_of_running_water", withExtension: "mp3") else { return }
+        guard let url = Bundle.main.url(forResource: "\(urlSound)", withExtension: "mp3") else { return }
         do {
             let data = try Data(contentsOf: url)
             self.uploadMp3(data: data)
@@ -68,7 +73,7 @@ extension PostProductVC {
         do {
             // Create a reference to the file you want to upload
             let storageRef = Storage.storage().reference()
-            let riversRef = storageRef.child("music/\(Date().timeIntervalSince1970)the_sound_of_running_water.mp3")
+            let riversRef = storageRef.child("music/\(Date().timeIntervalSince1970)\(urlSound).mp3")
             
             // Upload the file to the path "images/rivers.jpg"
            riversRef.putData(data, metadata: nil) { (metadata, error) in
@@ -92,7 +97,7 @@ extension PostProductVC {
         }
     }
     private func convertStringToData(urlMp3: String) {
-        guard let url = UIImage(named: "soundWater"), let data = url.pngData() else { return }
+        guard let url = UIImage(named: "\(imgText)"), let data = url.pngData() else { return }
         self.uploadToFirebase(urlMp3: urlMp3, data: data)
     }
     private func uploadToFirebase(urlMp3: String, data: Data) {
@@ -128,14 +133,14 @@ extension PostProductVC {
     }
     private func urlMp3Obserable() -> Observable<String> {
         return Observable.create { (obser) -> Disposable in
-            guard let url = Bundle.main.url(forResource: "the_sound_of_running_water", withExtension: "mp3") else { return  Disposables.create()}
+            guard let url = Bundle.main.url(forResource: "\(self.urlSound)", withExtension: "mp3") else { return  Disposables.create()}
             do {
                 let data = try Data(contentsOf: url)
                 
                 do {
                     // Create a reference to the file you want to upload
                     let storageRef = Storage.storage().reference()
-                    let riversRef = storageRef.child("music/\(Date().timeIntervalSince1970)the_sound_of_running_water.mp3")
+                    let riversRef = storageRef.child("music/\(Date().timeIntervalSince1970)\(self.urlSound).mp3")
                     
                     // Upload the file to the path "images/rivers.jpg"
                    riversRef.putData(data, metadata: nil) { (metadata, error) in
@@ -166,11 +171,11 @@ extension PostProductVC {
     }
     private func uploadImage() -> Observable<String> {
            return Observable.create { (obser) -> Disposable in
-               guard let url = UIImage(named: "soundWater"), let data = url.pngData() else { return  Disposables.create()}
+            guard let url = UIImage(named: "\(self.imgText)"), let data = url.pngData() else { return  Disposables.create()}
                 do {
                           // Create a reference to the file you want to upload
                           let storageRef = Storage.storage().reference()
-                          let riversRef = storageRef.child("imgMusic/\(Date().timeIntervalSince1970)soundWater.jpg")
+                    let riversRef = storageRef.child("imgMusic/\(Date().timeIntervalSince1970)\(self.imgText).jpg")
                           
                           // Upload the file to the path "images/rivers.jpg"
                           riversRef.putData(data, metadata: nil) { (metadata, error) in

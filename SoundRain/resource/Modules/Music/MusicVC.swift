@@ -24,6 +24,7 @@ class MusicVC: UIViewController {
     private let lbTimeMusic: UILabel = UILabel.init(frame: .zero)
     private let btNextItem: UIButton = UIButton.init(frame: .zero)
     private let btPlayItem: UIButton = UIButton.init(frame: .zero)
+    private let indicator: UIActivityIndicatorView = UIActivityIndicatorView(frame: .zero)
     private var isPlayAudio: Bool = false
     private var currentIndexItem: IndexPath?
     override func viewDidLoad() {
@@ -75,17 +76,18 @@ extension MusicVC {
         self.view.addSubview(collectionView)
         collectionView.snp.makeConstraints { (make) in
             make.left.right.equalToSuperview()
-            make.bottom.equalToSuperview().inset(hTabbar)
+            let heightPlayCurrent: CGFloat = 70
+            make.bottom.equalToSuperview().inset(hTabbar + heightPlayCurrent)
             make.height.equalTo(self.view.bounds.height * 2 / 3)
         }
-        collectionView.backgroundColor = .red
+        collectionView.backgroundColor = .clear
         
         vPlayCurrent.backgroundColor = #colorLiteral(red: 0.1450980392, green: 0.137254902, blue: 0.2901960784, alpha: 1)
 //        vPlayCurrent.isHidden = true
         self.view.addSubview(vPlayCurrent)
         vPlayCurrent.snp.makeConstraints { (make) in
             make.left.right.equalToSuperview()
-            make.bottom.equalTo(collectionView.snp.bottom)
+            make.top.equalTo(collectionView.snp.bottom)
             make.height.equalTo(70)
         }
 
@@ -132,11 +134,23 @@ extension MusicVC {
             make.centerY.equalToSuperview()
         }
         
+        self.indicator.backgroundColor = .gray
+        self.indicator.clipsToBounds = true
+        self.indicator.layer.cornerRadius = 25
+        self.view.addSubview(self.indicator)
+        self.indicator.snp.makeConstraints { (make) in
+            make.center.equalToSuperview()
+            make.width.height.equalTo(50)
+        }
+        self.indicator.startAnimating()
+        
     }
     private func setupRX() {
         MusicStreamIpl.share.listsc
+            .debounce(.seconds(1), scheduler: MainScheduler.asyncInstance)
             .bind(to: collectionView.rx.items(cellIdentifier: MusicCell.identifier, cellType: MusicCell.self)) { (row, element, cell) in
                 cell.updateUI(model: element)
+                self.indicator.stopAnimating()
         }.disposed(by: disposeBag)
         
         collectionView.rx.itemSelected.bind { (idx) in
