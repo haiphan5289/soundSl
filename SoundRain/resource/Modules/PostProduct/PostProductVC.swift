@@ -19,9 +19,9 @@ class PostProductVC: UIViewController {
     private var titleData = "Tiếng dế kêu"
     override func viewDidLoad() {
         super.viewDidLoad()
-        visualize()
-        login()
-        setupRX()
+//        visualize()
+//        login()
+//        setupRX()
         
     }
     

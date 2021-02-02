@@ -48,7 +48,7 @@
 		1B7C2E5A24FF40B3002B4539 /* ListMusic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListMusic.swift; sourceTree = "<group>"; };
 		1B7C2E5C24FF44B4002B4539 /* HeaderCornerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderCornerView.swift; sourceTree = "<group>"; };
 		1B7C2E5F24FF4782002B4539 /* ListMusicCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListMusicCell.swift; sourceTree = "<group>"; };
-		1B87FAAD24F157BD00515716 /* SoundRain.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SoundRain.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1B87FAAD24F157BD00515716 /* Sound to Sleep.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Sound to Sleep.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		1B87FAB024F157BD00515716 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		1B87FAB224F157BD00515716 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		1B87FAB424F157BD00515716 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -155,7 +155,7 @@
 		1B87FAAE24F157BD00515716 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				1B87FAAD24F157BD00515716 /* SoundRain.app */,
+				1B87FAAD24F157BD00515716 /* Sound to Sleep.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -283,7 +283,7 @@
 			);
 			name = SoundRain;
 			productName = SoundRain;
-			productReference = 1B87FAAD24F157BD00515716 /* SoundRain.app */;
+			productReference = 1B87FAAD24F157BD00515716 /* Sound to Sleep.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -572,7 +572,7 @@
 					"@executable_path/Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = haiphan.SoundRain;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = "Sound to Sleep";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -592,7 +592,7 @@
 					"@executable_path/Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = haiphan.SoundRain;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = "Sound to Sleep";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};

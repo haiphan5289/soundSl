@@ -10,14 +10,14 @@ import UIKit
 
 enum HomeType: Int, CaseIterable {
     case music
-    case postProduct
+//    case postProduct
     
     var text: String {
         switch self {
         case .music:
             return "Nghe nhạc"
-        case .postProduct:
-            return "Đăng SP"
+//        case .postProduct:
+//            return "Đăng SP"
         }
     }
 }
@@ -43,8 +43,8 @@ extension HomeTabbar {
         self.view.backgroundColor = .white
         
         let music = MusicVC()
-        let postProduct = PostProductVC()
-        viewControllers = [music, postProduct]
+//        let postProduct = PostProductVC()
+        viewControllers = [music]
         HomeType.allCases.forEach { (type) in
             if let controller = viewControllers?[type.rawValue] {
                 controller.tabBarItem.title = type.text
