@@ -78,7 +78,7 @@ extension MusicVC {
             make.left.right.equalToSuperview()
             let heightPlayCurrent: CGFloat = 70
             make.bottom.equalToSuperview().inset(hTabbar + heightPlayCurrent)
-            make.height.equalTo(self.view.bounds.height * 2 / 3)
+            make.height.equalTo(self.view.bounds.height * 1 / 2)
         }
         collectionView.backgroundColor = .clear
         

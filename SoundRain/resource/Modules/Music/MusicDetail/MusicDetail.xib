@@ -5,10 +5,11 @@
         <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="17126"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
-        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="MusicDetail" customModule="SoundRain" customModuleProvider="target">
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="MusicDetail" customModule="Sound_to_Sleep" customModuleProvider="target">
             <connections>
                 <outlet property="btListMusic" destination="qJ8-L7-f5C" id="eID-2u-iBJ"/>
                 <outlet property="btLoved" destination="3e1-c4-0vz" id="Vle-4E-Y5K"/>
@@ -27,6 +28,9 @@
             <rect key="frame" x="0.0" y="0.0" width="375" height="812"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
+                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="img_detail" translatesAutoresizingMaskIntoConstraints="NO" id="NiX-gT-ho8">
+                    <rect key="frame" x="0.0" y="0.0" width="375" height="812"/>
+                </imageView>
                 <stackView opaque="NO" contentMode="scaleToFill" distribution="fillEqually" translatesAutoresizingMaskIntoConstraints="NO" id="j0y-aE-nQX">
                     <rect key="frame" x="0.0" y="636" width="375" height="100"/>
                     <subviews>
@@ -77,17 +81,23 @@
                         <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Vbj-1U-kpx">
                             <rect key="frame" x="0.0" y="0.0" width="125" height="100"/>
                             <fontDescription key="fontDescription" type="system" pointSize="11"/>
-                            <state key="normal" title="Bài trước đó"/>
+                            <state key="normal" title="Bài trước đó">
+                                <color key="titleColor" systemColor="systemBackgroundColor"/>
+                            </state>
                         </button>
                         <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="12L-IX-x64">
                             <rect key="frame" x="125" y="0.0" width="125" height="100"/>
                             <fontDescription key="fontDescription" type="system" pointSize="11"/>
-                            <state key="normal" title="Đang nghe"/>
+                            <state key="normal" title="Đang nghe">
+                                <color key="titleColor" systemColor="systemBackgroundColor"/>
+                            </state>
                         </button>
                         <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="VsE-k9-vJf">
                             <rect key="frame" x="250" y="0.0" width="125" height="100"/>
                             <fontDescription key="fontDescription" type="system" pointSize="11"/>
-                            <state key="normal" title="Bài kế tiếp"/>
+                            <state key="normal" title="Bài kế tiếp">
+                                <color key="titleColor" systemColor="systemBackgroundColor"/>
+                            </state>
                         </button>
                     </subviews>
                     <constraints>
@@ -100,19 +110,29 @@
             <constraints>
                 <constraint firstItem="fnl-2z-Ty3" firstAttribute="trailing" secondItem="j0y-aE-nQX" secondAttribute="trailing" id="8Zo-kT-Xzv"/>
                 <constraint firstItem="u4i-WT-Cv4" firstAttribute="leading" secondItem="iSB-NV-gqT" secondAttribute="trailing" constant="16" id="BeZ-zR-gu9"/>
+                <constraint firstItem="NiX-gT-ho8" firstAttribute="top" secondItem="i5M-Pr-FkT" secondAttribute="top" id="EOp-Od-sp4"/>
                 <constraint firstItem="v9y-E0-FlL" firstAttribute="leading" secondItem="fnl-2z-Ty3" secondAttribute="leading" id="F5M-Gy-Kx1"/>
+                <constraint firstItem="NiX-gT-ho8" firstAttribute="leading" secondItem="fnl-2z-Ty3" secondAttribute="leading" id="QuN-zN-cw8"/>
                 <constraint firstItem="c6I-xk-pX5" firstAttribute="leading" secondItem="fnl-2z-Ty3" secondAttribute="leading" constant="16" id="Umd-5J-MaI"/>
                 <constraint firstItem="iSB-NV-gqT" firstAttribute="top" secondItem="v9y-E0-FlL" secondAttribute="bottom" constant="50" id="V5F-UW-xHI"/>
                 <constraint firstItem="fnl-2z-Ty3" firstAttribute="bottom" secondItem="j0y-aE-nQX" secondAttribute="bottom" constant="42" id="WlK-xh-CrB"/>
                 <constraint firstItem="iSB-NV-gqT" firstAttribute="leading" secondItem="c6I-xk-pX5" secondAttribute="trailing" constant="16" id="aqi-OL-d6i"/>
                 <constraint firstItem="fnl-2z-Ty3" firstAttribute="trailing" secondItem="u4i-WT-Cv4" secondAttribute="trailing" constant="16" id="fGE-3e-5tz"/>
+                <constraint firstItem="fnl-2z-Ty3" firstAttribute="trailing" secondItem="NiX-gT-ho8" secondAttribute="trailing" id="hsY-cb-S9Q"/>
                 <constraint firstItem="j0y-aE-nQX" firstAttribute="top" secondItem="c6I-xk-pX5" secondAttribute="bottom" constant="16" id="hyR-gm-RYj"/>
                 <constraint firstItem="j0y-aE-nQX" firstAttribute="leading" secondItem="fnl-2z-Ty3" secondAttribute="leading" id="ixe-ct-2XT"/>
                 <constraint firstItem="u4i-WT-Cv4" firstAttribute="centerY" secondItem="iSB-NV-gqT" secondAttribute="centerY" id="nQU-Ne-esm"/>
+                <constraint firstAttribute="bottom" secondItem="NiX-gT-ho8" secondAttribute="bottom" id="oYL-29-0LH"/>
                 <constraint firstItem="fnl-2z-Ty3" firstAttribute="trailing" secondItem="v9y-E0-FlL" secondAttribute="trailing" id="wsc-d5-mpv"/>
                 <constraint firstItem="j0y-aE-nQX" firstAttribute="top" secondItem="u4i-WT-Cv4" secondAttribute="bottom" constant="16" id="xDn-dA-Ung"/>
             </constraints>
-            <point key="canvasLocation" x="132" y="133"/>
+            <point key="canvasLocation" x="132" y="132.26600985221674"/>
         </view>
     </objects>
+    <resources>
+        <image name="img_detail" width="611" height="1500"/>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+    </resources>
 </document>
