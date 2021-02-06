@@ -26,7 +26,7 @@ protocol MusicStream {
 }
 final class MusicStreamIpl: MusicStream {
     var listsc: Observable<[MusicModel]> {
-        return self.$listSource.asObservable()
+        return self.dataSource.asObservable()
     }
     
     public static var share = MusicStreamIpl()

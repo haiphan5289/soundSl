@@ -82,6 +82,10 @@ final class MusicDetail: UIViewController {
 extension MusicDetail {
     func playIndexItem(idx: IndexPath) {
         
+        guard dataSource.count > 0 else {
+            return
+        }
+        
         let itemPlay = dataSource[idx.row]
         self.playSound(text: itemPlay.resource ?? "")
         self.updateUIBUtton(idx: idx)

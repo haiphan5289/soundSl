@@ -44,13 +44,13 @@ extension ListMusic {
             make.left.bottom.right.equalToSuperview()
             make.height.equalTo(200)
         }
-        let rect = CGRect(origin: .zero, size: CGSize(width: UIScreen.main.bounds.width, height: 200))
-           let benzier = UIBezierPath(roundedRect: rect, byRoundingCorners: [.topLeft, .topRight], cornerRadii: CGSize(width: 16, height: 16))
-           let shape = CAShapeLayer()
-           shape.frame = rect
-           shape.fillColor = UIColor.blue.cgColor
-           shape.path = benzier.cgPath
-           tableView.layer.mask = shape
+//        let rect = CGRect(origin: .zero, size: CGSize(width: UIScreen.main.bounds.width, height: 200))
+//           let benzier = UIBezierPath(roundedRect: rect, byRoundingCorners: [.topLeft, .topRight], cornerRadii: CGSize(width: 16, height: 16))
+//           let shape = CAShapeLayer()
+//           shape.frame = rect
+//           shape.fillColor = UIColor.blue.cgColor
+//           shape.path = benzier.cgPath
+//           tableView.layer.mask = shape
         tableView.delegate = self
         tableView.register(ListMusicCell.self, forCellReuseIdentifier: ListMusicCell.identifier)
         
