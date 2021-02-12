@@ -26,7 +26,7 @@ protocol MusicStream {
 }
 final class MusicStreamIpl: MusicStream {
     var listsc: Observable<[MusicModel]> {
-        return self.dataSource.asObservable()
+        return self.$listSource.asObservable()
     }
     
     public static var share = MusicStreamIpl()
@@ -59,7 +59,7 @@ final class MusicStreamIpl: MusicStream {
     @Replay(queue: MainScheduler.asyncInstance) private var maxValueSlider: Double
     @Replay(queue: MainScheduler.asyncInstance) private var itemCovert: MusicModel
     let timer = Observable<Int>.interval(RxTimeInterval.milliseconds(1000), scheduler: MainScheduler.asyncInstance)
-    @VariableReplay var timeMusicToOff: CGFloat = 0
+    @VariableReplay var timeMusicToOff: TimeInterval = 0
     @VariableReplay private var listSource: [MusicModel] = []
     @VariableReplay var indexTimeSelect: Int = -1
     private var mCurrentIndex: IndexPath?
@@ -74,7 +74,7 @@ extension MusicStreamIpl {
     private func dummyData() {
         let realm = try! Realm()
         let listCount = realm.objects(MyObject.self)
-        guard listCount.count <= 0 else {
+        guard listCount.count < 7 else {
             self.getMusicRealm(objects: listCount)
             return
         }
@@ -122,6 +122,7 @@ extension MusicStreamIpl {
             
         Observable.combineLatest(timer, isEndAudio, typeTime, timeOff).bind { [weak self] (current, isEnd, time, timeOff) in
             guard !isEnd else {
+                self?.audio?.pause()
                 return
             }
             
@@ -143,11 +144,6 @@ extension MusicStreamIpl {
                 return
             }
             
-            guard CGFloat(current) < timeOff else {
-                wSelf.audio?.pause()
-                return
-            }
-            
         }.disposed(by: disposeBag)
         
         Observable.combineLatest(self.isReplay.asObservable(), self.$isEndAudioObser).bind { [weak self] (isReplay, isEnd) in
@@ -159,6 +155,32 @@ extension MusicStreamIpl {
             }
             wSelf.isEndAudioObser = false
             MusicStreamIpl.share.audio?.play()
+        }.disposed(by: disposeBag)
+        
+        Observable.combineLatest(timer, self.$timeMusicToOff.asObservable(),  self.$isEndAudioObser, typeTime).bind { [weak self] (time, timeMusicOff, isEnd, typeTimeMusic) in
+            guard let wSelf = self else {
+                return
+            }
+            
+            guard timeMusicOff != 0 else {
+                wSelf.isEndAudioObser = false
+                MusicStreamIpl.share.audio?.play()
+                return
+            }
+            
+            guard typeTimeMusic != -1 else {
+                return
+            }
+            
+            let timeCurrent = Date().timeIntervalSince1970
+            
+            guard timeCurrent >= timeMusicOff else {
+                wSelf.isEndAudioObser = false
+                MusicStreamIpl.share.audio?.play()
+                return
+            }
+            
+            wSelf.isEndAudioObser = true
         }.disposed(by: disposeBag)
         
         let item = self.$itemCovert.flatMap { (item) -> Observable<MusicModel> in
@@ -243,6 +265,7 @@ extension MusicStreamIpl {
         
         
     }
+
     func updateListLove(item: MusicModel) {
         var listCurrent = self.listMusiceFavourite.value
         listCurrent.append(item)

@@ -49,7 +49,7 @@ class TimeOClock: UIViewController {
     private var tap: UITapGestureRecognizer = UITapGestureRecognizer()
     private let viewTable: UIView = UIView(frame: .zero)
     private var indexSelect: Int = -1
-    private var currentTime: Int = 0
+    private var maxTimeMusic: Double = 0
     private lazy var mContainer: HeaderCornerView = {
         let v = HeaderCornerView(with: 7)
         v.containerColor = .red
@@ -149,8 +149,9 @@ extension TimeOClock {
             wSelf.tableView.reloadData()
         }.disposed(by: disposeBag)
         
-        MusicStreamIpl.share.timer.bind(onNext: weakify({ (value, wSelf) in
-            wSelf.currentTime = value
+        MusicStreamIpl.share.maxValueAudio.bind(onNext: weakify({ (value, wSelf) in
+            wSelf.maxTimeMusic = value
+            
         })).disposed(by: disposeBag)
         
         tableView.rx.itemSelected.bind(onNext: weakify({ (idx, wSelf) in
@@ -159,7 +160,7 @@ extension TimeOClock {
                     MusicStreamIpl.share.indexTimeSelect = -1
                     return
                 }
-                MusicStreamIpl.share.timeMusicToOff = CGFloat(wSelf.currentTime) * CGFloat(idx.row) * 15 * 60
+                MusicStreamIpl.share.timeMusicToOff = wSelf.parseTimeMusicOff(row: idx.row)
                 MusicStreamIpl.share.indexTimeSelect = idx.row
             }
         })).disposed(by: disposeBag)
@@ -170,6 +171,16 @@ extension TimeOClock {
         
         self.tableView.reloadData()
     }
+    
+    private func parseTimeMusicOff(row: Int) -> TimeInterval {
+        if row == 0 {
+            return 0
+        }
+        let date = Date()
+        let timeToOff = CGFloat(row) * 15 * 60
+        return Double(timeToOff) + date.timeIntervalSince1970
+    }
+    
 }
 extension TimeOClock: UITableViewDelegate {
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
