@@ -157,29 +157,36 @@ extension MusicStreamIpl {
             MusicStreamIpl.share.audio?.play()
         }.disposed(by: disposeBag)
         
-        Observable.combineLatest(timer, self.$timeMusicToOff.asObservable(),  self.$isEndAudioObser, typeTime).bind { [weak self] (time, timeMusicOff, isEnd, typeTimeMusic) in
+        Observable.combineLatest(timer, self.$timeMusicToOff.asObservable(),self.$isEndAudioObser, typeTime, self.$isPlay.asObservable()).bind { [weak self] (time, timeMusicOff, isEnd, typeTimeMusic, isPlay) in
+
             guard let wSelf = self else {
                 return
             }
-            
-            guard timeMusicOff != 0 else {
-                wSelf.isEndAudioObser = false
-                MusicStreamIpl.share.audio?.play()
+
+            guard isPlay else {
+                wSelf.audio?.stop()
                 return
             }
-            
+
+
+            guard timeMusicOff != 0 else {
+//                wSelf.isEndAudioObser = false
+//                MusicStreamIpl.share.audio?.play()
+                return
+            }
+//
             guard typeTimeMusic != -1 else {
                 return
             }
-            
+
             let timeCurrent = Date().timeIntervalSince1970
-            
+
             guard timeCurrent >= timeMusicOff else {
                 wSelf.isEndAudioObser = false
-                MusicStreamIpl.share.audio?.play()
+                wSelf.audio?.play()
                 return
             }
-            
+
             wSelf.isEndAudioObser = true
         }.disposed(by: disposeBag)
         
