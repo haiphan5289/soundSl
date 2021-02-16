@@ -9,7 +9,7 @@
 import UIKit
 import RxCocoa
 import RxSwift
-
+import GoogleMobileAds
 
 protocol ListMusicDelegate {
     func selectIndex(index: IndexPath)
@@ -17,6 +17,8 @@ protocol ListMusicDelegate {
 
 class ListMusic: UIViewController {
 
+    private var interstitial: GADInterstitial!
+    
     private let tableView: UITableView = UITableView(frame: .zero, style: .grouped)
     private var dataSource: [MusicModel] = []
     private var tap: UITapGestureRecognizer = UITapGestureRecognizer()
@@ -54,6 +56,11 @@ extension ListMusic {
         tableView.delegate = self
         tableView.register(ListMusicCell.self, forCellReuseIdentifier: ListMusicCell.identifier)
         
+        self.interstitial = GADInterstitial(adUnitID: AdModId.share.interstitialID)
+        let request = GADRequest()
+        self.interstitial.load(request)
+        self.interstitial.delegate = self
+        
     }
     private func setupRX() {
 //        MusicStreamIpl.share.listsc.asObservable().bind(onNext: weakify({ (listData, wSelf) in
@@ -79,4 +86,9 @@ extension ListMusic {
 }
 extension ListMusic: UITableViewDelegate {
 
+}
+extension ListMusic: GADInterstitialDelegate {
+    func interstitialDidReceiveAd(_ ad: GADInterstitial) {
+        interstitial.present(fromRootViewController: self)
+    }
 }

@@ -9,6 +9,7 @@
 import UIKit
 import RxCocoa
 import RxSwift
+import GoogleMobileAds
 
 enum TypeTimeOClocka: Int {
     case minutes0, minutes15, minutes30, minutes45, minutes60
@@ -44,6 +45,9 @@ enum TypeTimeOClocka: Int {
 }
 
 class TimeOClock: UIViewController {
+    
+    private var interstitial: GADInterstitial!
+    
     private let tableView: UITableView = UITableView(frame: .zero, style: .grouped)
     private var dataSource: [MusicModel] = []
     private var tap: UITapGestureRecognizer = UITapGestureRecognizer()
@@ -123,7 +127,10 @@ extension TimeOClock {
             self.view.layoutIfNeeded()
         }
         
-        
+        self.interstitial = GADInterstitial(adUnitID: AdModId.share.interstitialID)
+        let request = GADRequest()
+        self.interstitial.load(request)
+        self.interstitial.delegate = self
         
     }
     private func setupRX() {
@@ -197,5 +204,10 @@ extension TimeOClock: UITableViewDelegate {
     }
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
         return 44
+    }
+}
+extension TimeOClock: GADInterstitialDelegate {
+    func interstitialDidReceiveAd(_ ad: GADInterstitial) {
+        interstitial.present(fromRootViewController: self)
     }
 }

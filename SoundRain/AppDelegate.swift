@@ -9,15 +9,23 @@
 import UIKit
 import CoreData
 import Firebase
+import GoogleMobileAds
 
+@available(iOS 13.0, *)
 @UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate {
-
-
+class AppDelegate: UIResponder, UIApplicationDelegate, GADFullScreenContentDelegate {
+    
+    var appOpenAd: GADAppOpenAd?
+    var loadTime = Date()
+    
+    var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
         FirebaseApp.configure()
+        
+        self.window = UIWindow(frame: UIScreen.main.bounds)
+        
         return true
     }
 
@@ -63,6 +71,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         })
         return container
     }()
+    
+    func applicationDidBecomeActive(_ application: UIApplication) {
+        self.tryToPresentAd()
+    }
 
     // MARK: - Core Data Saving support
 
@@ -78,6 +90,36 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 fatalError("Unresolved error \(nserror), \(nserror.userInfo)")
             }
         }
+    }
+    
+    //code open ads when opan app again
+    func requestAppOpenAd() {
+        let request = GADRequest()
+        GADAppOpenAd.load(withAdUnitID: AdModId.share.openApp,
+                          request: request,
+                          orientation: UIInterfaceOrientation.portrait,
+                          completionHandler: { (appOpenAdIn, _) in
+                            self.appOpenAd = appOpenAdIn
+                            self.appOpenAd?.fullScreenContentDelegate = self
+                            self.loadTime = Date()
+                            print("Ad is ready")
+                          })
+    }
+
+    func tryToPresentAd() {
+        if let gOpenAd = self.appOpenAd, let rwc = self.window?.rootViewController, wasLoadTimeLessThanNHoursAgo(thresholdN: 4) {
+            gOpenAd.present(fromRootViewController: rwc)
+        } else {
+            self.requestAppOpenAd()
+        }
+    }
+
+    func wasLoadTimeLessThanNHoursAgo(thresholdN: Int) -> Bool {
+        let now = Date()
+        let timeIntervalBetweenNowAndLoadTime = now.timeIntervalSince(self.loadTime)
+        let secondsPerHour = 3600.0
+        let intervalInHours = timeIntervalBetweenNowAndLoadTime / secondsPerHour
+        return intervalInHours < Double(thresholdN)
     }
 
 }

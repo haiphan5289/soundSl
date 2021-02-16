@@ -10,6 +10,7 @@ import UIKit
 import AVFoundation
 import RxSwift
 import RxCocoa
+import GoogleMobileAds
 
 protocol MusicDetailDelegate {
     func callBack()
@@ -20,6 +21,28 @@ final class MusicDetail: UIViewController {
     var data: MusicModel?
     var player: AVAudioPlayer?
     var delegate: MusicDetailDelegate?
+    
+    //Admob
+    private let banner: GADBannerView = {
+       let b = GADBannerView()
+        //source
+//        ca-app-pub-3940256099942544/2934735716
+        //drawanime
+        //ca-app-pub-1498500288840011/7599119385
+        //ca-app-pub-1498500288840011/7599119385
+        b.adUnitID = AdModId.share.bannerID
+        b.load(GADRequest())
+        b.adSize = kGADAdSizeSmartBannerPortrait
+        if #available(iOS 13.0, *) {
+            b.backgroundColor = .secondarySystemBackground
+        } else {
+            b.backgroundColor = .white
+        }
+        return b
+    }()
+    private var rewardedAd: GADRewardedAd?
+    private var interstitial: GADInterstitial!
+    
     @IBOutlet weak var lbStart: UILabel!
     @IBOutlet weak var btPause: UIButton!
     @IBOutlet weak var btReplay: UIButton!
@@ -40,6 +63,21 @@ final class MusicDetail: UIViewController {
         super.viewDidLoad()
         slideMusic.maximumValue = 10
         slideMusic.value = 0
+        
+        self.view.addSubview(banner)
+        banner.rootViewController = self
+        banner.snp.makeConstraints { (make) in
+            make.left.right.equalToSuperview()
+            make.height.equalTo(70)
+            make.width.equalToSuperview()
+            make.bottom.equalToSuperview()
+        }
+        
+        self.interstitial = GADInterstitial(adUnitID: AdModId.share.interstitialID)
+        let request = GADRequest()
+        self.interstitial.load(request)
+        self.interstitial.delegate = self
+        
         setupRX()
         MusicStreamIpl.share.currentIndex = currentIndex
     }
@@ -74,6 +112,7 @@ final class MusicDetail: UIViewController {
         }.disposed(by: disposeBag)
         
     }
+    
     override func viewWillDisappear(_ animated: Bool) {
         player?.pause()
         self.delegate?.callBack()
@@ -120,6 +159,23 @@ extension MusicDetail {
         }
     }
     private func setupRX() {
+        
+        Observable<Int>.interval(.seconds(1), scheduler: MainScheduler.instance).bind { [self] value in
+            guard value % 30 == 0 && value != 0 else {
+                return
+            }
+            //admob reward
+            rewardedAd = GADRewardedAd(adUnitID: AdModId.share.rewardID)
+            rewardedAd?.load(GADRequest()) { error in
+                  if let error = error {
+                    // Handle ad failed to load case.
+
+                  } else {
+                    print("load ads")
+                  }
+                }
+        }.disposed(by: disposeBag)
+        
         MusicStreamIpl.share.isEndAudioObser = false
         
         MusicStreamIpl.share.currentTime.bind(onNext: weakify({ (value, wSelf) in
@@ -258,6 +314,10 @@ extension MusicDetail {
             self.title = item.title
         }.disposed(by: disposeBag)
         
+        MusicStreamIpl.share.listsc.asObservable().bind(onNext: weakify({ (list, wSelf) in
+            wSelf.dataSource = list
+        })).disposed(by: disposeBag)
+        
     }
     
     @objc func playerDidFinishPlaying(){
@@ -296,5 +356,28 @@ extension MusicDetail: ListMusicDelegate {
             self.btPrevious.isEnabled = true
             self.btNext.isEnabled = true
         }
+    }
+}
+extension MusicDetail: GADRewardedAdDelegate {
+    /// Tells the delegate that the user earned a reward.
+    func rewardedAd(_ rewardedAd: GADRewardedAd, userDidEarn reward: GADAdReward) {
+      print("Reward received with currency: \(reward.type), amount \(reward.amount).")
+    }
+    /// Tells the delegate that the rewarded ad was presented.
+    func rewardedAdDidPresent(_ rewardedAd: GADRewardedAd) {
+      print("Rewarded ad presented.")
+    }
+    /// Tells the delegate that the rewarded ad was dismissed.
+    func rewardedAdDidDismiss(_ rewardedAd: GADRewardedAd) {
+      print("Rewarded ad dismissed.")
+    }
+    /// Tells the delegate that the rewarded ad failed to present.
+    func rewardedAd(_ rewardedAd: GADRewardedAd, didFailToPresentWithError error: Error) {
+      print("Rewarded ad failed to present.")
+    }
+}
+extension MusicDetail: GADInterstitialDelegate {
+    func interstitialDidReceiveAd(_ ad: GADInterstitial) {
+        interstitial.present(fromRootViewController: self)
     }
 }

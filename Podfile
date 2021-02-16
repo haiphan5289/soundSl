@@ -41,5 +41,7 @@ pod 'GoogleMaps'
 pod 'GooglePlaces'
 pod 'RealmSwift'
 pod 'KeyPathKit'
+pod 'Google-Mobile-Ads-SDK'
+pod 'Firebase/Analytics'
 
 end

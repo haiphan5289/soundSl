@@ -11,10 +11,31 @@ import SnapKit
 import AVFoundation
 import RxCocoa
 import RxSwift
+import GoogleMobileAds
 
 class MusicVC: UIViewController {
     
     var player: AVAudioPlayer?
+    
+    //Admob
+    private let banner: GADBannerView = {
+       let b = GADBannerView()
+        //source
+//        ca-app-pub-3940256099942544/2934735716
+        //drawanime
+        //ca-app-pub-1498500288840011/7599119385
+        //ca-app-pub-1498500288840011/7599119385
+        b.adUnitID = AdModId.share.bannerID
+        b.load(GADRequest())
+        b.adSize = kGADAdSizeSmartBannerPortrait
+        if #available(iOS 13.0, *) {
+            b.backgroundColor = .secondarySystemBackground
+        } else {
+            b.backgroundColor = .white
+        }
+        return b
+    }()
+    
     private var dataSource: [MusicModel] = []
     private var collectionView: UICollectionView!
     private let disposeBag = DisposeBag()
@@ -76,7 +97,7 @@ extension MusicVC {
         self.view.addSubview(collectionView)
         collectionView.snp.makeConstraints { (make) in
             make.left.right.equalToSuperview()
-            let heightPlayCurrent: CGFloat = 70
+            let heightPlayCurrent: CGFloat = 70 + 50
             make.bottom.equalToSuperview().inset(hTabbar + heightPlayCurrent)
             make.height.equalTo(self.view.bounds.height * 1 / 2)
         }
@@ -89,6 +110,15 @@ extension MusicVC {
             make.left.right.equalToSuperview()
             make.top.equalTo(collectionView.snp.bottom)
             make.height.equalTo(70)
+        }
+        
+        self.view.addSubview(banner)
+        banner.rootViewController = self
+        banner.snp.makeConstraints { (make) in
+            make.left.right.equalToSuperview()
+            make.height.equalTo(50)
+            make.width.equalToSuperview()
+            make.top.equalTo(self.vPlayCurrent.snp.bottom)
         }
 
 
@@ -117,6 +147,7 @@ extension MusicVC {
         }
 
         btNextItem.setTitle("Kế tiếp", for: .normal)
+        btNextItem.isHidden = true
         self.btNextItem.titleLabel?.font = UIFont.systemFont(ofSize: 11)
         self.vPlayCurrent.addSubview(btNextItem)
         btNextItem.snp.makeConstraints { (make) in
