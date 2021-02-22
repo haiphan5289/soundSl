@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import Kingfisher
 
 class MusicCell: UICollectionViewCell {
 
@@ -21,7 +22,11 @@ class MusicCell: UICollectionViewCell {
             return
         }
         
-        self.img.loadhinh(link: img)
+        guard let url = URL(string: img) else {
+            return
+        }
+        
+        self.img.kf.setImage(with: url)
         self.lbTitle.text = model.title
     }
 
