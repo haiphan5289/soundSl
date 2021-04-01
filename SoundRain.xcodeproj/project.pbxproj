@@ -602,7 +602,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = haiphan.SoundRain;
 				PRODUCT_NAME = "Sound to Sleep";
 				SWIFT_VERSION = 5.0;
@@ -624,7 +624,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = haiphan.SoundRain;
 				PRODUCT_NAME = "Sound to Sleep";
 				SWIFT_VERSION = 5.0;

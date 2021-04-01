@@ -11,6 +11,7 @@ import AVFoundation
 import RxSwift
 import RxCocoa
 import GoogleMobileAds
+import SnapKit
 
 protocol MusicDetailDelegate {
     func callBack()
@@ -317,6 +318,8 @@ extension MusicDetail {
         MusicStreamIpl.share.listsc.asObservable().bind(onNext: weakify({ (list, wSelf) in
             wSelf.dataSource = list
         })).disposed(by: disposeBag)
+        
+
         
     }
     
